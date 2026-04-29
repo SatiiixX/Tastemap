@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tastemap</title>
+<link href="https://fonts.googleapis.com/css2?family=Samsung+One:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --radius: 20px;
+    --radius-sm: 12px;
+    --radius-xs: 8px;
+    --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+    --font: 'Outfit', 'Segoe UI', sans-serif;
+    --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f0f;
+      --bg2: #1a1a1a;
+      --bg3: #242424;
+      --bg4: #2e2e2e;
+      --card: #1e1e1e;
+      --card2: #282828;
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f0f0;
+      --text2: #a0a0a0;
+      --text3: #606060;
+      --accent: #6ec6f5;
+      --accent2: #3a8fd1;
+      --accent-bg: rgba(110,198,245,0.12);
+      --green: #4ade80;
+      --green-bg: rgba(74,222,128,0.12);
+      --yellow: #fbbf24;
+      --yellow-bg: rgba(251,191,36,0.12);
+      --red: #f87171;
+      --red-bg: rgba(248,113,113,0.12);
+      --pill-bg: #2a2a2a;
+      --pill-active: #6ec6f5;
+      --pill-active-text: #0f0f0f;
+      --nav-bg: rgba(15,15,15,0.92);
+      --overlay: rgba(0,0,0,0.7);
+      --star: #fbbf24;
+    }
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f5f7;
+      --bg2: #ebebed;
+      --bg3: #e0e0e2;
+      --bg4: #d5d5d8;
+      --card: #ffffff;
+      --card2: #f9f9fb;
+      --border: rgba(0,0,0,0.07);
+      --text: #111111;
+      --text2: #666666;
+      --text3: #aaaaaa;
+      --accent: #1a73e8;
+      --accent2: #1558b0;
+      --accent-bg: rgba(26,115,232,0.1);
+      --green: #16a34a;
+      --green-bg: rgba(22,163,74,0.10);
+      --yellow: #d97706;
+      --yellow-bg: rgba(217,119,6,0.10);
+      --red: #dc2626;
+      --red-bg: rgba(220,38,38,0.10);
+      --pill-bg: #e8e8ea;
+      --pill-active: #1a73e8;
+      --pill-active-text: #ffffff;
+      --nav-bg: rgba(245,245,247,0.92);
+      --overlay: rgba(0,0,0,0.5);
+      --star: #d97706;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    overflow-x: hidden;
+    position: relative;
+    padding-bottom: 90px;
+  }
+
+  /* HEADER */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--nav-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 12px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .app-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .app-title span {
+    color: var(--accent);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg3);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: var(--transition);
+    color: var(--text);
+  }
+
+  .icon-btn:active { transform: scale(0.92); background: var(--bg4); }
+
+  /* SEARCH */
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 11px 16px 11px 42px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--font);
+    outline: none;
+    transition: var(--transition);
+  }
+
+  .search-input:focus {
+    border-color: var(--accent);
+    background: var(--card);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  /* FILTER PILLS */
+  .filter-section {
+    padding: 14px 20px 0;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-width: none;
+  }
+
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .pill {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 100px;
+    background: var(--pill-bg);
+    border: 1.5px solid var(--border);
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+
+  .pill.active {
+    background: var(--pill-active);
+    color: var(--pill-active-text);
+    border-color: var(--pill-active);
+  }
+
+  .pill:active { transform: scale(0.95); }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .stats-bar::-webkit-scrollbar { display: none; }
+
+  .stat-chip {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    min-width: 80px;
+  }
+
+  .stat-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 3px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    padding: 6px 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  /* CARDS */
+  .cards-list {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--transition);
+    animation: slideIn 0.3s ease both;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card:active { transform: scale(0.985); }
+
+  .card-inner {
+    padding: 16px;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .card-left { flex: 1; min-width: 0; }
+
+  .card-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .meta-tag {
+    font-size: 12px;
+    color: var(--text2);
+    background: var(--bg3);
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+
+  .cat-icon { font-size: 13px; }
+
+  .card-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .score-high { background: var(--green-bg); color: var(--green); }
+  .score-mid  { background: var(--yellow-bg); color: var(--yellow); }
+  .score-low  { background: var(--red-bg); color: var(--red); }
+  .score-none { background: var(--bg3); color: var(--text3); font-size: 20px; }
+
+  .card-dish {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .rec-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .rec-yes   { background: var(--green-bg); color: var(--green); }
+  .rec-maybe { background: var(--yellow-bg); color: var(--yellow); }
+  .rec-no    { background: var(--red-bg); color: var(--red); }
+
+  .card-right-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .price-tag {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .date-tag {
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .fav-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px;
+    transition: var(--transition);
+    line-height: 1;
+  }
+
+  .fav-btn:active { transform: scale(1.3); }
+
+  /* CITY GROUP DIVIDER */
+  .city-divider {
+    padding: 18px 20px 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .city-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .city-count {
+    font-size: 12px;
+    color: var(--text3);
+    background: var(--bg3);
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: var(--nav-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+
+  .nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    color: var(--text3);
+  }
+
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn:active { transform: scale(0.9); }
+
+  .nav-icon { font-size: 22px; line-height: 1; }
+  .nav-label { font-size: 11px; font-weight: 600; font-family: var(--font); }
+
+  /* FAB */
+  .fab {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: var(--pill-active-text);
+    box-shadow: 0 4px 20px rgba(110,198,245,0.4);
+    transition: var(--transition);
+    margin-top: -20px;
+  }
+
+  .fab:active { transform: scale(0.92); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--card);
+    border-radius: 28px 28px 0 0;
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 8px 20px 40px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34,1.26,0.64,1);
+  }
+
+  .modal-overlay.open .modal {
+    transform: translateY(0);
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--bg4);
+    border-radius: 2px;
+    margin: 8px auto 20px;
+  }
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--font);
+    outline: none;
+    transition: var(--transition);
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--accent);
+    background: var(--card);
+  }
+
+  .form-textarea { resize: none; min-height: 80px; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .score-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .score-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg4);
+    outline: none;
+  }
+
+  .score-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .score-display {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .rec-toggle {
+    display: flex;
+    gap: 8px;
+  }
+
+  .rec-option {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    text-align: center;
+    transition: var(--transition);
+  }
+
+  .rec-option.sel-yes   { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+  .rec-option.sel-maybe { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow); }
+  .rec-option.sel-no    { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+
+  .save-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: var(--pill-active-text);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 8px;
+  }
+
+  .save-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+  /* DETAIL MODAL */
+  .detail-modal .modal {
+    padding-bottom: 50px;
+  }
+
+  .detail-score-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .detail-score-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .detail-score-label { font-size: 10px; font-weight: 600; margin-top: 1px; }
+
+  .detail-name {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  .detail-city {
+    font-size: 14px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+
+  .detail-section {
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .detail-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+  }
+
+  .detail-section-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .detail-tags-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .detail-tag {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 100px;
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+
+  .maps-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--transition);
+    margin-top: 12px;
+  }
+
+  .maps-btn:active { opacity: 0.8; }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { font-size: 15px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: var(--bg);
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 300;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* STATS VIEW */
+  .stats-view {
+    display: none;
+    padding: 0 16px 20px;
+  }
+
+  .stats-view.active { display: block; }
+
+  .stats-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+
+  .stats-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text2);
+    margin-bottom: 14px;
+  }
+
+  .top-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .top-item:last-child { border-bottom: none; }
+
+  .top-rank {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .top-info { flex: 1; min-width: 0; }
+  .top-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .top-sub  { font-size: 12px; color: var(--text3); }
+  .top-score { font-size: 15px; font-weight: 800; color: var(--accent); }
+
+  .bar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .bar-label { font-size: 13px; font-weight: 600; color: var(--text2); width: 70px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.6s ease; }
+  .bar-count { font-size: 12px; color: var(--text3); width: 20px; text-align: right; flex-shrink: 0; }
+
+  .main-view { display: block; }
+  .main-view.hidden { display: none; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">Taste<span>map</span></div>
+    <div class="header-actions">
+      <button class="icon-btn" id="sortBtn" title="Sortieren">⇅</button>
+      <button class="icon-btn" id="favFilterBtn" title="Favoriten">🤍</button>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" id="searchInput" placeholder="Restaurant, Stadt, Gericht suchen…">
+  </div>
+</div>
+
+<!-- FILTER PILLS -->
+<div class="filter-section">
+  <div class="filter-row" id="categoryFilter">
+    <button class="pill active" data-val="all">Alle</button>
+    <button class="pill" data-val="Restaurant">🍽 Restaurant</button>
+    <button class="pill" data-val="Bar">🍹 Bar</button>
+    <button class="pill" data-val="Club">🎵 Club</button>
+    <button class="pill" data-val="Cafe">☕ Café</button>
+    <button class="pill" data-val="Hotel">🏨 Hotel</button>
+    <button class="pill" data-val="Geschäft">🛍 Geschäft</button>
+    <button class="pill" data-val="Kultur">🎨 Kultur</button>
+  </div>
+</div>
+
+<!-- MAIN VIEW -->
+<div class="main-view" id="mainView">
+  <!-- STATS BAR -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- CARDS -->
+  <div id="cardsContainer"></div>
+</div>
+
+<!-- STATS VIEW -->
+<div class="stats-view" id="statsView"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="navHome" onclick="switchTab('home')">
+    <span class="nav-icon">🗺</span>
+    <span class="nav-label">Entdecken</span>
+  </button>
+  <button class="nav-btn" id="navFavs" onclick="switchTab('favs')">
+    <span class="nav-icon">❤️</span>
+    <span class="nav-label">Favoriten</span>
+  </button>
+  <button class="fab" onclick="openAddModal()">＋</button>
+  <button class="nav-btn" id="navStats" onclick="switchTab('stats')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Statistik</span>
+  </button>
+  <button class="nav-btn" id="navMap" onclick="exportData()">
+    <span class="nav-icon">📤</span>
+    <span class="nav-label">Export</span>
+  </button>
+</nav>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✦ Neuer Eintrag</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Stadt</label>
+        <input class="form-input" id="inp-city" placeholder="z.B. Wien">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input class="form-input" id="inp-date" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="inp-name" placeholder="Restaurantname">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Kategorie</label>
+        <select class="form-select" id="inp-cat">
+          <option value="Restaurant">🍽 Restaurant</option>
+          <option value="Bar">🍹 Bar</option>
+          <option value="Club">🎵 Club</option>
+          <option value="Cafe">☕ Café</option>
+          <option value="Hotel">🏨 Hotel</option>
+          <option value="Geschäft">🛍 Geschäft</option>
+          <option value="Kultur">🎨 Kultur</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preis</label>
+        <select class="form-select" id="inp-price">
+          <option value="€">€ Günstig</option>
+          <option value="€€" selected>€€ Mittel</option>
+          <option value="€€€">€€€ Gehoben</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Gericht / Aktivität</label>
+      <input class="form-input" id="inp-dish" placeholder="z.B. Schnitzel mit Pommes">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bewertung <span id="scoreVal">–</span></label>
+      <div class="score-slider-wrap">
+        <input class="score-slider" type="range" id="inp-score" min="1" max="10" step="0.5" value="5">
+        <div class="score-display" id="scoreCircle">5</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Empfehlung</label>
+      <div class="rec-toggle">
+        <button class="rec-option sel-yes" data-rec="Ja" onclick="setRec(this,'Ja')">👍 Ja</button>
+        <button class="rec-option" data-rec="Geht so" onclick="setRec(this,'Geht so')">🤷 Geht so</button>
+        <button class="rec-option" data-rec="Nein" onclick="setRec(this,'Nein')">👎 Nein</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notizen</label>
+      <textarea class="form-textarea" id="inp-notes" placeholder="Bewertung, Tipps, Besonderheiten…"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Google Maps Link</label>
+      <input class="form-input" id="inp-maps" placeholder="https://maps.app.goo.gl/…">
+    </div>
+    <button class="save-btn" onclick="saveEntry()">Eintrag speichern</button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay detail-modal" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const CAT_ICONS = {
+  'Restaurant':'🍽','Bar':'🍹','Club':'🎵','Cafe':'☕','Hotel':'🏨','Geschäft':'🛍','Kultur':'🎨'
+};
+
+let data = [
+  {id:1,date:'2023-01-05',city:'Wien',cat:'Cafe',name:'Zum schwarzen Kamel',dish:'Weißwein',score:null,rec:'Ja',price:'€€',notes:'Ca. 15 Minuten warten. Kellner freundlich aber kühl. Wein super. Atmosphäre locker.',maps:'https://goo.gl/maps/NBvd4oheCyHpEPsb7',fav:false},
+  {id:2,date:'2023-01-05',city:'Wien',cat:'Geschäft',name:'Wein & CO Stephansplatz',dish:'Weinhandlung',score:null,rec:'Ja',price:'€€ - €€€',notes:'Top Beratung. Viel Auswahl.',maps:'https://goo.gl/maps/xUEwCbjAMyYzx8MbA',fav:false},
+  {id:3,date:'2023-01-05',city:'Wien',cat:'Restaurant',name:'Zum Goldenen Würstel',dish:'Käsekrainer in Baguette',score:6.8,rec:'Ja',price:'€',notes:'Sehr lecker. Wird satt. Preislich günstig.',maps:'https://goo.gl/maps/XTZqteaMTCHhypaV6',fav:false},
+  {id:4,date:'2023-01-05',city:'Wien',cat:'Bar',name:'Billabong Australian Pub',dish:'Club Sandwich + Aperol',score:6.5,rec:'Ja',price:'€ - €€',notes:'Entspannte Atmosphäre zum Sport schauen. Freundliche Mitarbeiter. Sandwich und Aperol war lecker.',maps:'https://goo.gl/maps/QF8A9Azm7kZdYNUL7',fav:false},
+  {id:5,date:'2023-01-06',city:'Wien',cat:'Kultur',name:'Albertina Museum',dish:'Basquiat Ausstellung',score:null,rec:'Ja',price:'€€',notes:'Sehr voll da Feiertag. Auch relativ warm. Ausstellung sehr interessant.',maps:'https://goo.gl/maps/mbMhf2TDmGBe8MZd8',fav:false},
+  {id:6,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Figlmüller Bäckerstraße',dish:'Schnitzel vom Schwein + Pommes',score:9.6,rec:'Ja',price:'€€',notes:'Das bisher beste Schnitzel überhaupt. Unheimlich gut. Nur mit etwas Zitrone genießen. Reservieren! Ca. 20 Min. anstehen.',maps:'https://goo.gl/maps/UrNJm3QPJGxeufbH6',fav:true},
+  {id:7,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Gasthaus Pöschl',dish:'Grießnocherlsuppe, Leber, Rostbraten',score:8.1,rec:'Ja',price:'€€',notes:'Alles sehr üppig und lecker. Sehr entspannte Atmosphäre. Reservierung notwendig. Bedienung sehr nett.',maps:'https://goo.gl/maps/4M3FA9pX4dxSUroCA',fav:false},
+  {id:8,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleines Cafe',dish:'Cuba Libre + Kurze',score:null,rec:'Ja',price:'€ - €€',notes:'Super Atmosphäre, komplett locker. Super Mitarbeiter. Preislich etwas teuer.',maps:'https://goo.gl/maps/xwuGkX1GDGRkGk618',fav:false},
+  {id:9,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Loos American Bar',dish:'Cuba Libre',score:null,rec:'Ja',price:'€ - €€',notes:'Zentrale Lage, preislich teurer. Gute Drinks, stark gemixt.',maps:'https://goo.gl/maps/oW6y2s4fvPw5JyAD7',fav:false},
+  {id:10,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleinod',dish:'Champagner',score:null,rec:'Ja',price:'€€',notes:'War lecker. Bar sehr voll. Gäste trotz gehobenem Aussehen normal.',maps:'https://goo.gl/maps/5NvtfNXrqMgd77b36',fav:false},
+  {id:11,date:'2023-01-06',city:'Wien',cat:'Club',name:'SASS Music Club',dish:'Bacardi Boot',score:null,rec:'Geht so',price:'€€',notes:'Preislich relativ teuer. Gute Musik. Anfangs etwas leer. Kleiner Club.',maps:'https://goo.gl/maps/1nfyH2fNsnTmavms9',fav:false},
+  {id:12,date:'2023-01-05',city:'Wien',cat:'Hotel',name:'Zoku Vienna',dish:'Zimmer für 2 mit Balkon',score:null,rec:'Ja',price:'€€',notes:'Sehr schön, ziemlich neu. Freundliche Mitarbeiter. Parkplatz 25€/Tag. Schöne Dachterrasse. Lage etwas außerhalb.',maps:'https://goo.gl/maps/BjHeaVBYte7CDEhB6',fav:false},
+  {id:13,date:'2023-05-28',city:'München',cat:'Restaurant',name:'Nebenan Brunch & Bar',dish:'Nudeln mit Trüffelsauce',score:7.2,rec:'Ja',price:'€€',notes:'Super Besitzer und Angestellte. Sehr freundlich. Preislich top. Essen klasse. Extrawünsche möglich.',maps:'https://goo.gl/maps/ZUhmN1QRQVHMN8YD7',fav:false},
+  {id:14,date:'2023-05-28',city:'München',cat:'Club',name:'Lucky Who',dish:'Gin',score:null,rec:'Geht so',price:'€€',notes:'Outdoorclub. Getränke münchentypisch teuer. Stimmung gut. DJ + Live Act eher mies.',maps:'https://goo.gl/maps/Mrh5ywh4vSkm9zzAA',fav:false},
+  {id:15,date:'2023-05-29',city:'München',cat:'Restaurant',name:'Max Emanuel Brauerei',dish:'Schnitzel + Bratkartoffeln + Spezi',score:8.5,rec:'Ja',price:'€€',notes:'Sehr lecker. Schnitzel wirklich sehr gut, Bratkartoffeln erst recht. Preislich teuer aber idyllischer Biergarten mitten in der Stadt.',maps:'https://goo.gl/maps/RiyNDfeg811SCSmU9',fav:true},
+  {id:16,date:'2023-08-26',city:'Regensburg',cat:'Bar',name:'Palletti-Bar',dish:'–',score:null,rec:'Geht so',price:'€€',notes:'Kleine Bar mit wenigen Sitzplätzen. Kein Außenbereich ab 24 Uhr. Entspannte Atmosphäre. Nichts besonderes.',maps:'https://maps.app.goo.gl/JxBiGsr1Fk3w5Mja6',fav:false},
+  {id:17,date:'2023-08-27',city:'Regensburg',cat:'Bar',name:'da Silva Bar & Lounge',dish:'–',score:null,rec:'Nein',price:'',notes:'Viel zu heiß. Oben ok, unten viel zu warm und stickig. Direkt umgedreht.',maps:'https://maps.app.goo.gl/Yh5tN5uykdLVray18',fav:false},
+  {id:18,date:'2023-08-27',city:'Regensburg',cat:'Club',name:'0941 Bar',dish:'–',score:null,rec:'Ja',price:'',notes:'Sehr gute Stimmung und Musik. Nur kurz drin gewesen. Atmosphäre top. Kein Eintritt.',maps:'https://maps.app.goo.gl/cuWTX5DKdyCb9Zf9A',fav:false},
+  {id:19,date:'2023-08-26',city:'Regensburg',cat:'Restaurant',name:'Kneitinger Keller',dish:'Leberknödelsuppe',score:6.5,rec:'Ja',price:'€€',notes:'Essen in Ordnung. Biergarten und Location schön. Preislich ok, aber nicht günstig.',maps:'https://goo.gl/maps/qiAgiDUAZgf8LEnn6',fav:false},
+  {id:20,date:'2023-12-07',city:'Bärnau',cat:'Restaurant',name:'Gasthof zur Post',dish:'Leberknödelsuppe, Schnitzel, Apfelstrudel',score:7.6,rec:'Ja',price:'€€',notes:'Leberknödelsuppe etwas wässrig. Schnitzel sehr gut! Pommes top gewürzt. Apfelstrudel in Vanillesoße gut. Große Portionen.',maps:'https://maps.app.goo.gl/hD8ugjqDcnU3Rrpj7',fav:false}
+];
+
+let nextId = 21;
+let activeCategory = 'all';
+let favOnly = false;
+let sortMode = 'date'; // date | score | name
+let currentTab = 'home';
+let selectedRec = 'Ja';
+
+// ── RENDER ──────────────────────────────────────────────────
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  return data.filter(e => {
+    if (activeCategory !== 'all' && e.cat !== activeCategory) return false;
+    if (favOnly && !e.fav) return false;
+    if (q && !`${e.name} ${e.city} ${e.dish} ${e.notes}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function getSorted(arr) {
+  if (sortMode === 'score') return [...arr].sort((a,b) => (b.score||0) - (a.score||0));
+  if (sortMode === 'name')  return [...arr].sort((a,b) => a.name.localeCompare(b.name));
+  return [...arr].sort((a,b) => new Date(b.date) - new Date(a.date));
+}
+
+function scoreClass(s) {
+  if (!s) return 'score-none';
+  if (s >= 8) return 'score-high';
+  if (s >= 6) return 'score-mid';
+  return 'score-low';
+}
+
+function recClass(r) {
+  if (r === 'Ja') return 'rec-yes';
+  if (r === 'Nein') return 'rec-no';
+  return 'rec-maybe';
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
+
+function renderStatsBar(filtered) {
+  const withScore = filtered.filter(e => e.score);
+  const avg = withScore.length ? (withScore.reduce((s,e)=>s+e.score,0)/withScore.length).toFixed(1) : '–';
+  const recs = filtered.filter(e => e.rec === 'Ja').length;
+  const favs = filtered.filter(e => e.fav).length;
+  const cities = [...new Set(filtered.map(e=>e.city))].length;
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip"><div class="stat-val">${filtered.length}</div><div class="stat-label">Einträge</div></div>
+    <div class="stat-chip"><div class="stat-val">${avg}</div><div class="stat-label">Ø Wertung</div></div>
+    <div class="stat-chip"><div class="stat-val">${recs}</div><div class="stat-label">Empfehlungen</div></div>
+    <div class="stat-chip"><div class="stat-val">${cities}</div><div class="stat-label">Städte</div></div>
+    <div class="stat-chip"><div class="stat-val">${favs}</div><div class="stat-label">Favoriten</div></div>
+  `;
+}
+
+function render() {
+  const filtered = getSorted(getFiltered());
+  renderStatsBar(filtered);
+
+  const container = document.getElementById('cardsContainer');
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽</div><div class="empty-text">Keine Einträge gefunden</div></div>`;
+    return;
+  }
+
+  // Group by city
+  const groups = {};
+  filtered.forEach(e => {
+    if (!groups[e.city]) groups[e.city] = [];
+    groups[e.city].push(e);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([city, items]) => {
+    html += `<div class="city-divider"><span class="city-name">${city}</span><span class="city-count">${items.length}</span></div>`;
+    html += `<div class="cards-list">`;
+    items.forEach((e, i) => {
+      const sc = e.score ? e.score : '●';
+      const scClass = scoreClass(e.score);
+      html += `
+        <div class="card" onclick="openDetail(${e.id})" style="animation-delay:${i*0.04}s">
+          <div class="card-inner">
+            <div class="card-top">
+              <div class="card-left">
+                <div class="card-name">${e.name}</div>
+                <div class="card-meta">
+                  <span class="cat-icon">${CAT_ICONS[e.cat]||'📍'}</span>
+                  <span class="meta-tag">${e.cat}</span>
+                  ${e.date ? `<span class="meta-tag">${formatDate(e.date)}</span>` : ''}
+                </div>
+              </div>
+              <div class="card-score ${scClass}">${sc}</div>
+            </div>
+            ${e.dish && e.dish !== '–' ? `<div class="card-dish">🍴 ${e.dish}</div>` : ''}
+            <div class="card-bottom">
+              <span class="rec-badge ${recClass(e.rec)}">${e.rec === 'Ja' ? '👍 Empfohlen' : e.rec === 'Nein' ? '👎 Nicht empfohlen' : '🤷 Geht so'}</span>
+              <div class="card-right-meta">
+                ${e.price ? `<span class="price-tag">${e.price}</span>` : ''}
+                <button class="fav-btn" onclick="toggleFav(event,${e.id})">${e.fav ? '❤️' : '🤍'}</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ── DETAIL ──────────────────────────────────────────────────
+function openDetail(id) {
+  const e = data.find(x => x.id === id);
+  if (!e) return;
+  const scClass = scoreClass(e.score);
+  const content = document.getElementById('detailContent');
+  content.innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="detail-score-row">
+      <div class="detail-score-circle ${scClass}">
+        ${e.score || '–'}
+        ${e.score ? '<div class="detail-score-label">/10</div>' : ''}
+      </div>
+      <div>
+        <div class="detail-name">${e.name}</div>
+        <div class="detail-city">📍 ${e.city}${e.date ? ' · ' + formatDate(e.date) : ''}</div>
+      </div>
+    </div>
+    <div class="detail-tags-row">
+      <span class="detail-tag">${CAT_ICONS[e.cat]||''} ${e.cat}</span>
+      ${e.price ? `<span class="detail-tag">${e.price}</span>` : ''}
+      <span class="rec-badge ${recClass(e.rec)}">${e.rec === 'Ja' ? '👍 Empfohlen' : e.rec === 'Nein' ? '👎 Nein' : '🤷 Geht so'}</span>
+    </div>
+    ${e.dish && e.dish !== '–' ? `<div class="detail-section"><div class="detail-section-title">Gericht</div><div class="detail-section-text">🍴 ${e.dish}</div></div>` : ''}
+    ${e.notes ? `<div class="detail-section"><div class="detail-section-title">Bewertung & Notizen</div><div class="detail-section-text">${e.notes}</div></div>` : ''}
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      ${e.maps ? `<a class="maps-btn" href="${e.maps}" target="_blank">🗺 In Google Maps öffnen</a>` : ''}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button class="maps-btn" style="flex:1;border-color:var(--border);color:var(--text2);background:var(--bg3)" onclick="toggleFavDetail(${e.id})">${e.fav ? '❤️ Favorit entfernen' : '🤍 Als Favorit'}</button>
+      <button class="maps-btn" style="flex:1;border-color:var(--red);color:var(--red);background:var(--red-bg)" onclick="deleteEntry(${e.id})">🗑 Löschen</button>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function toggleFavDetail(id) {
+  const e = data.find(x => x.id === id);
+  if (e) { e.fav = !e.fav; openDetail(id); render(); }
+}
+
+function deleteEntry(id) {
+  if (!confirm('Eintrag wirklich löschen?')) return;
+  data = data.filter(x => x.id !== id);
+  closeModal('detailModal');
+  render();
+  toast('Eintrag gelöscht');
+}
+
+// ── FAVORITES ──────────────────────────────────────────────
+function toggleFav(ev, id) {
+  ev.stopPropagation();
+  const e = data.find(x => x.id === id);
+  if (e) { e.fav = !e.fav; render(); toast(e.fav ? '❤️ Favorit gespeichert' : 'Favorit entfernt'); }
+}
+
+// ── ADD ENTRY ──────────────────────────────────────────────
+function openAddModal() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inp-date').value = today;
+  document.getElementById('inp-city').value = '';
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-dish').value = '';
+  document.getElementById('inp-notes').value = '';
+  document.getElementById('inp-maps').value = '';
+  document.getElementById('inp-score').value = 5;
+  document.getElementById('scoreCircle').textContent = '5';
+  selectedRec = 'Ja';
+  document.querySelectorAll('.rec-option').forEach(b => {
+    b.className = 'rec-option' + (b.dataset.rec === 'Ja' ? ' sel-yes' : '');
+  });
+  document.getElementById('addModal').classList.add('open');
+}
+
+function setRec(btn, val) {
+  selectedRec = val;
+  document.querySelectorAll('.rec-option').forEach(b => {
+    b.className = 'rec-option';
+    if (b.dataset.rec === val) {
+      b.className += val === 'Ja' ? ' sel-yes' : val === 'Geht so' ? ' sel-maybe' : ' sel-no';
+    }
+  });
+}
+
+function saveEntry() {
+  const name = document.getElementById('inp-name').value.trim();
+  const city = document.getElementById('inp-city').value.trim();
+  if (!name || !city) { toast('❗ Name und Stadt pflicht'); return; }
+
+  const scoreRaw = parseFloat(document.getElementById('inp-score').value);
+  data.unshift({
+    id: nextId++,
+    date: document.getElementById('inp-date').value,
+    city,
+    cat: document.getElementById('inp-cat').value,
+    name,
+    dish: document.getElementById('inp-dish').value,
+    score: scoreRaw,
+    rec: selectedRec,
+    price: document.getElementById('inp-price').value,
+    notes: document.getElementById('inp-notes').value,
+    maps: document.getElementById('inp-maps').value,
+    fav: false
+  });
+
+  closeModal('addModal');
+  render();
+  toast('✅ Eintrag gespeichert!');
+}
+
+// Score slider live
+document.getElementById('inp-score').addEventListener('input', function() {
+  document.getElementById('scoreCircle').textContent = this.value;
+});
+
+// ── FILTERS ────────────────────────────────────────────────
+document.getElementById('categoryFilter').addEventListener('click', e => {
+  const pill = e.target.closest('.pill');
+  if (!pill) return;
+  document.querySelectorAll('#categoryFilter .pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  activeCategory = pill.dataset.val;
+  render();
+});
+
+document.getElementById('searchInput').addEventListener('input', render);
+
+document.getElementById('favFilterBtn').addEventListener('click', function() {
+  favOnly = !favOnly;
+  this.textContent = favOnly ? '❤️' : '🤍';
+  render();
+});
+
+document.getElementById('sortBtn').addEventListener('click', function() {
+  const modes = ['date','score','name'];
+  const icons = ['⇅','⬆','🔤'];
+  sortMode = modes[(modes.indexOf(sortMode)+1) % modes.length];
+  this.textContent = icons[modes.indexOf(sortMode)];
+  toast('Sortierung: ' + ['Datum','Bewertung','Name'][modes.indexOf(sortMode)]);
+  render();
+});
+
+// ── TABS ───────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  ['navHome','navFavs','navStats','navMap'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const mainView = document.getElementById('mainView');
+  const statsView = document.getElementById('statsView');
+  const filterSection = document.querySelector('.filter-section');
+
+  if (tab === 'home') {
+    document.getElementById('navHome').classList.add('active');
+    mainView.classList.remove('hidden');
+    statsView.classList.remove('active');
+    filterSection.style.display = '';
+    favOnly = false;
+    document.getElementById('favFilterBtn').textContent = '🤍';
+    render();
+  } else if (tab === 'favs') {
+    document.getElementById('navFavs').classList.add('active');
+    mainView.classList.remove('hidden');
+    statsView.classList.remove('active');
+    filterSection.style.display = '';
+    favOnly = true;
+    document.getElementById('favFilterBtn').textContent = '❤️';
+    render();
+  } else if (tab === 'stats') {
+    document.getElementById('navStats').classList.add('active');
+    mainView.classList.add('hidden');
+    statsView.classList.add('active');
+    filterSection.style.display = 'none';
+    renderStats();
+  }
+}
+
+function renderStats() {
+  const sv = document.getElementById('statsView');
+  const withScore = data.filter(e => e.score);
+  const avg = withScore.length ? (withScore.reduce((s,e)=>s+e.score,0)/withScore.length).toFixed(1) : '–';
+
+  // Top rated
+  const top = [...withScore].sort((a,b)=>b.score-a.score).slice(0,5);
+
+  // By city
+  const cityMap = {};
+  data.forEach(e => { cityMap[e.city] = (cityMap[e.city]||0)+1; });
+  const cities = Object.entries(cityMap).sort((a,b)=>b[1]-a[1]);
+  const maxCity = cities[0]?.[1] || 1;
+
+  // By cat
+  const catMap = {};
+  data.forEach(e => { catMap[e.cat] = (catMap[e.cat]||0)+1; });
+  const cats = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const maxCat = cats[0]?.[1] || 1;
+
+  sv.innerHTML = `
+    <div style="padding:16px 0 8px;font-size:22px;font-weight:800;">📊 Statistik</div>
+    <div class="stats-card">
+      <div class="stats-card-title">🏆 Top Bewertungen</div>
+      ${top.map((e,i)=>`
+        <div class="top-item" onclick="openDetail(${e.id})">
+          <div class="top-rank">${i+1}</div>
+          <div class="top-info">
+            <div class="top-name">${e.name}</div>
+            <div class="top-sub">${e.city} · ${e.cat}</div>
+          </div>
+          <div class="top-score">${e.score}</div>
+        </div>`).join('')}
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-title">📍 Einträge nach Stadt</div>
+      ${cities.map(([city,count])=>`
+        <div class="bar-item">
+          <div class="bar-label">${city}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(count/maxCity*100).toFixed(0)}%"></div></div>
+          <div class="bar-count">${count}</div>
+        </div>`).join('')}
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-title">🗂 Einträge nach Kategorie</div>
+      ${cats.map(([cat,count])=>`
+        <div class="bar-item">
+          <div class="bar-label">${CAT_ICONS[cat]||''} ${cat}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(count/maxCat*100).toFixed(0)}%"></div></div>
+          <div class="bar-count">${count}</div>
+        </div>`).join('')}
+    </div>
+    <div class="stats-card" style="display:flex;gap:20px;justify-content:space-around;text-align:center;">
+      <div><div class="stat-val">${data.length}</div><div class="stat-label">Gesamt</div></div>
+      <div><div class="stat-val">${avg}</div><div class="stat-label">Ø Wertung</div></div>
+      <div><div class="stat-val">${data.filter(e=>e.fav).length}</div><div class="stat-label">Favoriten</div></div>
+      <div><div class="stat-val">${data.filter(e=>e.rec==='Ja').length}</div><div class="stat-label">Empfohlen</div></div>
+    </div>
+  `;
+}
+
+// ── EXPORT ─────────────────────────────────────────────────
+function exportData() {
+  const headers = ['Datum','Stadt','Kategorie','Name','Gericht','Bewertung','Empfehlung','Preis','Notizen','Maps'];
+  const rows = data.map(e => [
+    e.date, e.city, e.cat, e.name, e.dish, e.score||'', e.rec, e.price, e.notes.replace(/\n/g,' '), e.maps
+  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(';'));
+  const csv = [headers.join(';'), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Tastemap_Export.csv';
+  a.click();
+  toast('📤 CSV exportiert');
+}
+
+// ── MODALS ─────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.getElementById('addModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('addModal')) closeModal('addModal');
+});
+
+document.getElementById('detailModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('detailModal')) closeModal('detailModal');
+});
+
+// ── TOAST ──────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── INIT ───────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
