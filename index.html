@@ -5,234 +5,286 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Tastemap</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root {
-  --r: 20px; --rs: 14px; --rxs: 8px;
-  --t: 0.2s cubic-bezier(.4,0,.2,1);
-  --font: 'Outfit', system-ui, sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:#0d0d0d; --bg2:#161616; --bg3:#1f1f1f; --bg4:#2a2a2a; --bg5:#333;
-    --card:#181818; --card2:#202020;
-    --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
-    --text:#f2f2f2; --text2:#909090; --text3:#505050;
-    --acc:#5eb8f5; --acc2:#3a8fd1; --acc-bg:rgba(94,184,245,.13);
-    --green:#4ade80; --green-bg:rgba(74,222,128,.13);
-    --yellow:#fbbf24; --yellow-bg:rgba(251,191,36,.13);
-    --red:#f87171; --red-bg:rgba(248,113,113,.13);
-    --pill:#242424; --pill-act:#5eb8f5; --pill-act-t:#0d0d0d;
-    --nav:rgba(13,13,13,.93);
-    --ov:rgba(0,0,0,.75);
-    --shadow:0 8px 40px rgba(0,0,0,.4);
-    --shadow2:0 2px 12px rgba(0,0,0,.3);
-  }
-}
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg:#f2f2f5; --bg2:#e8e8ec; --bg3:#dededf; --bg4:#d0d0d5; --bg5:#c5c5cb;
-    --card:#fff; --card2:#f8f8fb;
-    --border:rgba(0,0,0,.07); --border2:rgba(0,0,0,.13);
-    --text:#111; --text2:#666; --text3:#aaa;
-    --acc:#1a73e8; --acc2:#1558b0; --acc-bg:rgba(26,115,232,.1);
-    --green:#16a34a; --green-bg:rgba(22,163,74,.1);
-    --yellow:#d97706; --yellow-bg:rgba(217,119,6,.1);
-    --red:#dc2626; --red-bg:rgba(220,38,38,.1);
-    --pill:#e4e4e8; --pill-act:#1a73e8; --pill-act-t:#fff;
-    --nav:rgba(242,242,245,.93);
-    --ov:rgba(0,0,0,.5);
-    --shadow:0 8px 40px rgba(0,0,0,.12);
-    --shadow2:0 2px 12px rgba(0,0,0,.08);
-  }
-}
+:root{--r:20px;--rs:14px;--rxs:8px;--t:.2s cubic-bezier(.4,0,.2,1);--font:'Outfit',system-ui,sans-serif}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0d0d0d;--bg2:#161616;--bg3:#1f1f1f;--bg4:#2a2a2a;--bg5:#333;
+  --card:#181818;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#f2f2f2;--text2:#909090;--text3:#505050;
+  --acc:#5eb8f5;--acc-bg:rgba(94,184,245,.13);
+  --green:#4ade80;--green-bg:rgba(74,222,128,.13);
+  --yellow:#fbbf24;--yellow-bg:rgba(251,191,36,.13);
+  --red:#f87171;--red-bg:rgba(248,113,113,.13);
+  --pill:#242424;--pill-act:#5eb8f5;--pill-act-t:#0d0d0d;
+  --nav:rgba(13,13,13,.96);--ov:rgba(0,0,0,.82);
+}}
+@media(prefers-color-scheme:light){:root{
+  --bg:#f2f2f5;--bg2:#e8e8ec;--bg3:#dededf;--bg4:#d0d0d5;--bg5:#c5c5cb;
+  --card:#fff;--border:rgba(0,0,0,.07);--border2:rgba(0,0,0,.13);
+  --text:#111;--text2:#666;--text3:#aaa;
+  --acc:#1a73e8;--acc-bg:rgba(26,115,232,.1);
+  --green:#16a34a;--green-bg:rgba(22,163,74,.1);
+  --yellow:#d97706;--yellow-bg:rgba(217,119,6,.1);
+  --red:#dc2626;--red-bg:rgba(220,38,38,.1);
+  --pill:#e4e4e8;--pill-act:#1a73e8;--pill-act-t:#fff;
+  --nav:rgba(242,242,245,.96);--ov:rgba(0,0,0,.55);
+}}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
-body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;position:relative;display:flex;flex-direction:column}
+body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;display:flex;flex-direction:column}
+#shell{display:flex;flex-direction:column;height:100%;overflow:hidden}
+#scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:96px}
+#scroll::-webkit-scrollbar{display:none}
 
-/* ── SCROLLABLE MAIN ── */
-#appShell{display:flex;flex-direction:column;height:100%;overflow:hidden}
-#scrollArea{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:100px}
-#scrollArea::-webkit-scrollbar{display:none}
-
-/* ── HEADER ── */
+/* HEADER */
 .hdr{position:sticky;top:0;z-index:90;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 18px 10px}
-.hdr-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.logo{font-size:24px;font-weight:900;letter-spacing:-.5px}.logo em{color:var(--acc);font-style:normal}
-.hdr-btns{display:flex;gap:7px}
-.ico-btn{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;transition:var(--t);color:var(--text)}
-.ico-btn:active{transform:scale(.9)}
-.ico-btn.on{background:var(--acc-bg);color:var(--acc)}
-.search-wrap{position:relative;margin-bottom:10px}
+.hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.logo{font-size:24px;font-weight:900;letter-spacing:-.5px;user-select:none}
+.logo em{color:var(--acc);font-style:normal}
+.hdr-btns{display:flex;gap:5px;align-items:center}
+.ico-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:var(--t);color:var(--text)}
+.ico-btn:active{transform:scale(.88)}
+.vt{display:flex;gap:3px}
+.vt-btn{width:30px;height:30px;border-radius:var(--rxs);background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:var(--t);color:var(--text3)}
+.vt-btn.on{background:var(--acc-bg);color:var(--acc)}
+.search-w{position:relative;margin-bottom:10px}
 .search-inp{width:100%;padding:10px 14px 10px 40px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:var(--t)}
 .search-inp:focus{border-color:var(--acc);background:var(--card)}
 .search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
-
-/* filter bar */
-.filter-bar{padding:0 18px 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
-.filter-bar::-webkit-scrollbar{display:none}
-.pill{flex-shrink:0;padding:6px 13px;border-radius:100px;background:var(--pill);border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t);white-space:nowrap;user-select:none}
+.fbar{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.fbar::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:5px 12px;border-radius:100px;background:var(--pill);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t);white-space:nowrap;user-select:none}
 .pill.on{background:var(--pill-act);color:var(--pill-act-t);border-color:var(--pill-act)}
-.pill:active{transform:scale(.93)}
-.pill-btn{background:none;border:none}
+.pill:active{transform:scale(.92)}
 
-/* ── STATS CHIPS ── */
-.stats-row{display:flex;gap:9px;padding:10px 18px 4px;overflow-x:auto;scrollbar-width:none}
-.stats-row::-webkit-scrollbar{display:none}
-.stat-chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;cursor:pointer;transition:var(--t);min-width:72px;text-align:center;user-select:none}
-.stat-chip:active{transform:scale(.94)}
-.stat-chip.on{border-color:var(--acc);background:var(--acc-bg)}
-.stat-v{font-size:20px;font-weight:800;color:var(--acc);line-height:1}
-.stat-l{font-size:11px;color:var(--text3);font-weight:600;margin-top:3px}
+/* STAT CHIPS */
+.chips{display:flex;gap:8px;padding:12px 18px 4px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:9px 13px;cursor:pointer;transition:var(--t);min-width:64px;text-align:center;user-select:none}
+.chip:active{transform:scale(.93)}
+.chip.on{border-color:var(--acc);background:var(--acc-bg)}
+.chip-v{font-size:18px;font-weight:800;color:var(--acc);line-height:1}
+.chip-l{font-size:10px;color:var(--text3);font-weight:600;margin-top:3px}
 
-/* ── SECTION ── */
+/* CARDS */
 .city-hdr{padding:16px 18px 6px;display:flex;align-items:center;gap:9px}
-.city-name{font-size:17px;font-weight:800}
-.city-cnt{font-size:12px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:100px}
-
-/* ── LIST VIEW ── */
-.list-wrap{padding:0 14px;display:flex;flex-direction:column;gap:10px}
-
-.entry-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:var(--t);animation:slideIn .25s ease both}
-@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.entry-card:active{transform:scale(.985)}
-
-.card-img-strip{width:100%;height:140px;object-fit:cover;display:block}
-.card-inner{padding:14px}
-.card-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
-.card-name{font-size:16px;font-weight:700;line-height:1.25;flex:1;min-width:0}
-.score-bubble{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;flex-direction:column;gap:0}
-.score-bubble .sub-lbl{font-size:8px;font-weight:700;opacity:.7;margin-top:1px}
+.city-nm{font-size:17px;font-weight:800}
+.city-ct{font-size:12px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:100px}
+.list-w{padding:0 14px;display:flex;flex-direction:column;gap:10px}
+.ecard{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:transform var(--t);animation:fup .25s ease both}
+@keyframes fup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ecard:active{transform:scale(.985)}
+.ecard-img{width:100%;height:126px;object-fit:cover;display:block}
+.ecard-body{padding:13px}
+.ecard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
+.ecard-name{font-size:16px;font-weight:700;line-height:1.25;flex:1;min-width:0}
+.score-bub{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;flex-direction:column}
+.score-bub .sl{font-size:8px;opacity:.7;margin-top:1px;font-weight:700}
 .sh{background:var(--green-bg);color:var(--green)}
 .sm{background:var(--yellow-bg);color:var(--yellow)}
 .sl{background:var(--red-bg);color:var(--red)}
 .sn{background:var(--bg3);color:var(--text3);font-size:18px}
-
-.card-meta-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.tag{font-size:12px;color:var(--text2);background:var(--bg3);padding:2px 8px;border-radius:100px;font-weight:500;white-space:nowrap}
+/* Row 1: city / cat / cuisine */
+.ecard-row1{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+/* Row 2: last visit / count / trend */
+.ecard-row2{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.tag{font-size:11px;color:var(--text2);background:var(--bg3);padding:2px 7px;border-radius:100px;font-weight:500;white-space:nowrap}
 .tag.city{background:var(--acc-bg);color:var(--acc)}
-
-.card-dish{font-size:13px;color:var(--text2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-bottom{display:flex;align-items:center;justify-content:space-between}
-.rec-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:100px}
+.tag.cuisine{background:var(--yellow-bg);color:var(--yellow)}
+.tag.visits{background:var(--green-bg);color:var(--green)}
+.trend-b{font-size:12px;font-weight:700;padding:2px 6px;border-radius:100px}
+.tu{background:var(--green-bg);color:var(--green)}
+.td{background:var(--red-bg);color:var(--red)}
+.te{background:var(--bg3);color:var(--text3)}
+.ecard-bottom{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.rec-b{font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;flex-shrink:0}
 .ry{background:var(--green-bg);color:var(--green)}
 .rm{background:var(--yellow-bg);color:var(--yellow)}
 .rn{background:var(--red-bg);color:var(--red)}
-.card-right{display:flex;align-items:center;gap:8px}
-.price-tag{font-size:13px;font-weight:700;color:var(--acc)}
-.fav-btn{background:none;border:none;font-size:19px;cursor:pointer;padding:2px;line-height:1;transition:var(--t)}
-.fav-btn:active{transform:scale(1.35)}
+.ecard-right{display:flex;align-items:center;gap:5px}
+.price-t{font-size:12px;font-weight:700;color:var(--acc)}
+.fav-btn{background:none;border:none;font-size:18px;cursor:pointer;padding:2px;line-height:1;transition:var(--t)}
+.fav-btn:active{transform:scale(1.4)}
+/* Trend sparkline — mini SVG inline */
+.trendline-wrap{flex:1;display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden}
+.trendline-svg{flex:1;height:22px;min-width:40px;max-width:80px}
+.sub-scores-mini{display:flex;gap:8px;margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.ssm{display:flex;flex-direction:column;align-items:center;gap:1px}
+.ssm-v{font-size:11px;font-weight:700;color:var(--text2)}
+.ssm-l{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
 
-/* sub-score dots in list */
-.sub-scores{display:flex;gap:10px;margin-top:6px}
-.sub-s{display:flex;flex-direction:column;align-items:center;gap:2px}
-.sub-s-val{font-size:11px;font-weight:700;color:var(--text2)}
-.sub-s-lbl{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+/* GRID */
+.grid-w{padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gcard{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:var(--t);animation:fup .25s ease both}
+.gcard:active{transform:scale(.96)}
+.gcard-img{width:100%;height:100px;object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px}
+.gcard-body{padding:10px}
+.gcard-name{font-size:13px;font-weight:700;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
+.gcard-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.gcard-city{font-size:11px;color:var(--acc);font-weight:600}
+.gcard-score{font-size:14px;font-weight:800}
 
-/* ── GRID VIEW ── */
-.grid-wrap{padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:var(--t);animation:slideIn .25s ease both}
-.grid-card:active{transform:scale(.96)}
-.grid-img{width:100%;height:110px;object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:32px}
-.grid-body{padding:10px}
-.grid-name{font-size:13px;font-weight:700;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
-.grid-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.grid-city{font-size:11px;color:var(--acc);font-weight:600}
-.grid-score{font-size:14px;font-weight:800;color:var(--text)}
-.grid-score.sh{color:var(--green)}
-.grid-score.sm{color:var(--yellow)}
-.grid-score.sl{color:var(--red)}
-.grid-score.sn{color:var(--text3)}
-.grid-rec{font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px}
-.grid-fav{font-size:15px;line-height:1}
-
-/* ── BOTTOM NAV ── */
-.bnav{position:sticky;bottom:0;z-index:90;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:10px 0 max(12px,env(safe-area-inset-bottom))}
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 14px;border-radius:var(--rs);transition:var(--t);color:var(--text3);font-family:var(--font)}
+/* BOTTOM NAV */
+.bnav{position:sticky;bottom:0;z-index:90;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:8px 0 max(12px,env(safe-area-inset-bottom))}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:5px 8px;border-radius:var(--rs);transition:var(--t);color:var(--text3);font-family:var(--font)}
 .nav-btn.on{color:var(--acc)}
 .nav-btn:active{transform:scale(.88)}
-.nav-ico{font-size:21px;line-height:1}
+.nav-ico{font-size:19px;line-height:1}
 .nav-lbl{font-size:10px;font-weight:700}
-.fab{width:54px;height:54px;border-radius:50%;background:var(--acc);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--pill-act-t);box-shadow:0 4px 20px rgba(94,184,245,.4);transition:var(--t);margin-top:-16px;flex-shrink:0}
+.fab{width:50px;height:50px;border-radius:50%;background:var(--acc);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--pill-act-t);box-shadow:0 4px 20px rgba(94,184,245,.4);transition:var(--t);margin-top:-12px;flex-shrink:0}
 .fab:active{transform:scale(.9)}
 
-/* ── OVERLAY / SHEET ── */
-.overlay{position:fixed;inset:0;background:var(--ov);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s ease}
-.overlay.open{opacity:1;pointer-events:all}
-.sheet{background:var(--card);border-radius:26px 26px 0 0;width:100%;max-width:430px;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .32s cubic-bezier(.34,1.1,.64,1);padding:0 20px 48px;scrollbar-width:none}
+/* MODALS — layered z-index system:
+   detail=300, visitDetail=400, forms=500
+   Each sits above the previous */
+.ov{position:fixed;inset:0;background:var(--ov);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;padding:20px}
+.ov.open{opacity:1;pointer-events:all}
+/* centered zoom-pop modal */
+.mbox{background:var(--card);border-radius:24px;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;transform:scale(.88);opacity:0;transition:transform .25s cubic-bezier(.34,1.2,.64,1),opacity .2s ease;scrollbar-width:none;position:relative}
+.mbox::-webkit-scrollbar{display:none}
+.ov.open .mbox{transform:scale(1);opacity:1}
+/* bottom sheet */
+.sheet-ov{position:fixed;inset:0;background:var(--ov);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.sheet-ov.open{opacity:1;pointer-events:all}
+.sheet{background:var(--card);border-radius:26px 26px 0 0;width:100%;max-width:430px;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .32s cubic-bezier(.34,1.1,.64,1);padding:0 20px 52px;scrollbar-width:none;position:relative}
 .sheet::-webkit-scrollbar{display:none}
-.overlay.open .sheet{transform:translateY(0)}
-.sheet-handle{width:38px;height:4px;background:var(--bg4);border-radius:2px;margin:10px auto 18px}
-.sheet-title{font-size:20px;font-weight:800;margin-bottom:18px}
+.sheet-ov.open .sheet{transform:translateY(0)}
+/* z-index layers */
+#detailOv{z-index:300}
+#visitDetailOv{z-index:400}
+#visitFormOv{z-index:500}
+#restFormOv{z-index:500}
+#filterOv{z-index:500}
+#cuisineOv{z-index:600}
 
-/* form */
-.fg{margin-bottom:14px}
+.handle{width:38px;height:4px;background:var(--bg4);border-radius:2px;margin:10px auto 16px}
+.mox{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.38);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#fff;z-index:10;transition:var(--t);backdrop-filter:blur(4px)}
+.mox:active{transform:scale(.88)}
+.sox{position:absolute;top:14px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--bg3);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:var(--t);z-index:2}
+.sox:active{transform:scale(.88)}
+.sh-title{font-size:20px;font-weight:800;margin-bottom:16px;padding-right:40px}
+
+/* DETAIL MODAL */
+.dm-hero{width:100%;height:180px;object-fit:cover;display:block;border-radius:24px 24px 0 0}
+.dm-hero-ph{width:100%;height:140px;display:flex;align-items:center;justify-content:center;font-size:52px;background:var(--bg3);border-radius:24px 24px 0 0}
+.dm-body{padding:16px 18px 20px}
+.dm-score-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px}
+.dm-big{width:62px;height:62px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:20px;flex-shrink:0}
+.dm-big .dbl{font-size:10px;font-weight:700;margin-top:1px;opacity:.7}
+.dm-title{font-size:20px;font-weight:900;line-height:1.2;margin-bottom:3px}
+.dm-sub{font-size:12px;color:var(--text2);line-height:1.4}
+.dm-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.dm-tag{font-size:12px;font-weight:700;padding:4px 10px;border-radius:100px;background:var(--acc-bg);color:var(--acc)}
+.dm-sec{background:var(--bg3);border-radius:var(--rs);padding:12px;margin-bottom:9px}
+.dm-sec-t{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px}
+.dm-sec-txt{font-size:13px;color:var(--text);line-height:1.55}
+.ssc-row{display:flex;justify-content:space-around;padding:6px 0}
+.ssc{display:flex;flex-direction:column;align-items:center;gap:3px}
+.ssc-v{font-size:20px;font-weight:900;color:var(--acc)}
+.ssc-l{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.dm-actions{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.dm-btn{flex:1;min-width:56px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 5px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;text-decoration:none;transition:var(--t)}
+.dm-btn:active{transform:scale(.93)}
+.dm-btn.acc{background:var(--acc-bg);color:var(--acc);border-color:var(--acc)}
+.dm-btn.warn{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow)}
+.dm-btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+
+/* VISIT LIST */
+.vlist{display:flex;flex-direction:column;gap:7px}
+.vitem{display:flex;align-items:center;gap:10px;padding:10px 11px;background:var(--card);border-radius:var(--rs);border:1px solid var(--border);cursor:pointer;transition:var(--t)}
+.vitem:active{transform:scale(.98)}
+.vitem.latest{border-color:var(--acc);background:var(--acc-bg)}
+.vdot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.vinfo{flex:1;min-width:0}
+.vdate{font-size:13px;font-weight:700}
+.vsub{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vsc{font-size:15px;font-weight:900;color:var(--acc);flex-shrink:0}
+
+/* VISIT DETAIL MODAL */
+.vd-score-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-right:36px}
+.vd-big{width:58px;height:58px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0}
+.vd-big .dbl{font-size:9px;font-weight:700;opacity:.7;margin-top:1px}
+.vd-title{font-size:17px;font-weight:800;line-height:1.2}
+.vd-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.vd-actions{display:flex;gap:8px;margin-top:12px}
+.vd-btn{flex:1;padding:11px 8px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;gap:5px}
+.vd-btn:active{transform:scale(.94)}
+.vd-btn.edit{background:var(--acc-bg);color:var(--acc);border-color:var(--acc)}
+.vd-btn.del{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%}
+.chart-svg{width:100%;overflow:visible;display:block}
+.c-grid{stroke:var(--border);stroke-width:1}
+.c-line{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.c-dot{cursor:pointer}
+.c-xlbl{font-size:9px;fill:var(--text3);text-anchor:middle;font-family:var(--font)}
+.c-ylbl{font-size:9px;fill:var(--text3);text-anchor:end;font-family:var(--font)}
+.chart-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px}
+.cleg{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--text2)}
+.cleg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* FORM */
+.fg{margin-bottom:13px}
 .fl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;display:block}
 .fi,.fs,.ft{width:100%;padding:11px 13px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:var(--t)}
 .fi:focus,.fs:focus,.ft:focus{border-color:var(--acc);background:var(--card)}
-.ft{resize:none;min-height:72px}
+.ft{resize:none;min-height:68px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* score sliders */
-.slider-group{display:flex;flex-direction:column;gap:10px}
-.slider-row{display:flex;align-items:center;gap:10px}
-.slider-name{font-size:12px;font-weight:700;color:var(--text2);width:60px;flex-shrink:0}
-.slider{flex:1;-webkit-appearance:none;height:5px;border-radius:3px;background:var(--bg4);outline:none;cursor:pointer}
-.slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--acc);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.slider-val{width:32px;height:32px;border-radius:50%;background:var(--acc-bg);color:var(--acc);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.total-score{text-align:center;padding:12px;background:var(--bg3);border-radius:var(--rs);margin-top:8px}
-.total-score .ts-num{font-size:32px;font-weight:900;color:var(--acc)}
-.total-score .ts-lbl{font-size:12px;color:var(--text3);font-weight:600}
-
-/* rec toggle */
+.slrow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.slnm{font-size:12px;font-weight:700;color:var(--text2);width:58px;flex-shrink:0}
+.sl-inp{flex:1;-webkit-appearance:none;height:5px;border-radius:3px;background:var(--bg4);outline:none;cursor:pointer}
+.sl-inp::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--acc);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.slval{width:32px;height:32px;border-radius:50%;background:var(--acc-bg);color:var(--acc);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.total-sc{text-align:center;padding:10px;background:var(--bg3);border-radius:var(--rs);margin-top:7px}
+.ts-n{font-size:28px;font-weight:900;color:var(--acc)}
+.ts-l{font-size:11px;color:var(--text3);font-weight:600}
 .rec-tog{display:flex;gap:7px}
-.rec-opt{flex:1;padding:9px 6px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;text-align:center;transition:var(--t)}
-.rec-opt.sel-y{background:var(--green-bg);color:var(--green);border-color:var(--green)}
-.rec-opt.sel-m{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow)}
-.rec-opt.sel-n{background:var(--red-bg);color:var(--red);border-color:var(--red)}
-
-/* image upload */
-.img-upload-area{width:100%;height:130px;border-radius:var(--rs);border:2px dashed var(--border2);background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);position:relative;overflow:hidden}
-.img-upload-area:hover{border-color:var(--acc)}
-.img-preview{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
-.img-upload-hint{font-size:13px;color:var(--text3);font-weight:600;text-align:center;z-index:1}
-.img-upload-icon{font-size:28px;margin-bottom:6px;z-index:1}
-.img-remove{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
-
-/* buttons */
+.ropt{flex:1;padding:9px 4px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;text-align:center;transition:var(--t)}
+.ropt.sly{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+.ropt.slm{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow)}
+.ropt.sln{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+.img-area{width:100%;height:116px;border-radius:var(--rs);border:2px dashed var(--border2);background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);position:relative;overflow:hidden}
+.img-area:hover{border-color:var(--acc)}
+.img-prev{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.img-hint{font-size:12px;color:var(--text3);font-weight:600;z-index:1}
+.img-ico{font-size:24px;margin-bottom:4px;z-index:1}
+.img-rm{position:absolute;top:7px;right:7px;width:25px;height:25px;border-radius:50%;background:rgba(0,0,0,.55);border:none;color:#fff;font-size:13px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:2}
+.tags-w{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);min-height:42px;cursor:text}
+.tags-w:focus-within{border-color:var(--acc);background:var(--card)}
+.tchip{display:flex;align-items:center;gap:4px;background:var(--acc-bg);color:var(--acc);font-size:12px;font-weight:700;padding:3px 9px;border-radius:100px}
+.tchip button{background:none;border:none;color:var(--acc);font-size:13px;cursor:pointer;padding:0;line-height:1}
+.tinp{border:none;background:none;color:var(--text);font-size:13px;font-family:var(--font);outline:none;min-width:80px;flex:1}
 .btn-row{display:flex;gap:10px;margin-top:14px}
-.btn{flex:1;padding:14px;border-radius:var(--rs);border:none;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:var(--t)}
-.btn:active{transform:scale(.97);opacity:.9}
-.btn-primary{background:var(--acc);color:var(--pill-act-t)}
-.btn-ghost{background:var(--bg3);color:var(--text2);border:1.5px solid var(--border)}
+.btn{flex:1;padding:13px;border-radius:var(--rs);border:none;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--acc);color:var(--pill-act-t)}
+.btn-g{background:var(--bg3);color:var(--text2);border:1.5px solid var(--border)}
+.dupe-w{background:var(--yellow-bg);border:1.5px solid var(--yellow);border-radius:var(--rs);padding:10px 13px;font-size:13px;color:var(--yellow);font-weight:600;margin-bottom:10px;display:none;cursor:pointer}
+.div{height:1px;background:var(--border);margin:13px 0}
 
-/* ── DETAIL SHEET ── */
-.detail-hero{width:calc(100% + 40px);margin:-0px -20px 0;height:200px;object-fit:cover;display:block}
-.detail-hero-placeholder{width:calc(100% + 40px);margin:0 -20px;height:160px;display:flex;align-items:center;justify-content:center;font-size:56px;background:var(--bg3)}
-.detail-score-row{display:flex;align-items:flex-start;gap:14px;padding:16px 0 12px}
-.detail-big-score{width:72px;height:72px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:24px;flex-shrink:0}
-.detail-big-score .dbl{font-size:10px;font-weight:700;margin-top:1px;opacity:.7}
-.detail-title{font-size:22px;font-weight:900;line-height:1.2;margin-bottom:3px}
-.detail-city-row{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px}
-.detail-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.detail-tag{font-size:13px;font-weight:700;padding:5px 12px;border-radius:100px;background:var(--acc-bg);color:var(--acc)}
-.detail-section{background:var(--bg3);border-radius:var(--rs);padding:14px;margin-bottom:10px}
-.detail-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
-.detail-section-text{font-size:14px;color:var(--text);line-height:1.55}
-.sub-score-row{display:flex;justify-content:space-around;padding:10px 0}
-.sub-score-item{display:flex;flex-direction:column;align-items:center;gap:3px}
-.sub-score-val{font-size:22px;font-weight:900;color:var(--acc)}
-.sub-score-lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.detail-action-row{display:flex;gap:8px;margin-top:12px}
-.detail-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 8px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;text-decoration:none;transition:var(--t)}
-.detail-btn:active{transform:scale(.95)}
-.detail-btn.accent{background:var(--acc-bg);color:var(--acc);border-color:var(--acc)}
-.detail-btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+/* DISH RATINGS */
+.dish-list{display:flex;flex-direction:column;gap:8px}
+.dish-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--card);border-radius:var(--rs);border:1px solid var(--border)}
+.dish-name{font-size:13px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dish-score{font-size:14px;font-weight:800}
+.dish-rec{font-size:11px;padding:2px 7px;border-radius:100px}
 
-/* ── STATS VIEW ── */
-.stats-view{padding:0 16px 20px}
-.stats-view-title{font-size:22px;font-weight:900;padding:16px 2px 12px}
-.stats-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px}
-.scard-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+/* FILTER PANEL */
+.fp-g{margin-bottom:14px}
+.fp-t{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px}
+.fp-pills{display:flex;flex-wrap:wrap;gap:7px}
+.fp-p{padding:6px 12px;border-radius:100px;background:var(--pill);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t);user-select:none}
+.fp-p.on{background:var(--pill-act);color:var(--pill-act-t);border-color:var(--pill-act)}
+.fp-range{display:flex;align-items:center;gap:10px}
+.fp-range label{font-size:14px;color:var(--acc);font-weight:700;min-width:24px;text-align:right}
+
+/* STATS */
+.sv-title{font-size:22px;font-weight:900;padding:14px 2px 12px}
+.sc{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:15px;margin-bottom:11px}
+.sc-t{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:11px;text-transform:uppercase;letter-spacing:.5px}
 .top-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer}
 .top-item:last-child{border-bottom:none}
 .top-rank{width:24px;height:24px;border-radius:50%;background:var(--acc-bg);color:var(--acc);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -240,116 +292,181 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
 .top-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-sub{font-size:11px;color:var(--text3)}
 .top-sc{font-size:15px;font-weight:900;color:var(--acc)}
-.bar-item{display:flex;align-items:center;gap:10px;margin-bottom:9px}
-.bar-lbl{font-size:12px;font-weight:700;color:var(--text2);width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
-.bar-fill{height:100%;border-radius:4px;background:var(--acc);transition:width .6s ease}
-.bar-cnt{font-size:11px;color:var(--text3);width:18px;text-align:right;flex-shrink:0}
+.bar-i{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.bar-l{font-size:12px;font-weight:700;color:var(--text2);width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-t{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-f{height:100%;border-radius:4px;background:var(--acc);transition:width .6s ease}
+.bar-c{font-size:11px;color:var(--text3);width:18px;text-align:right;flex-shrink:0}
 .kpi-row{display:flex;justify-content:space-around;padding:6px 0}
-.kpi{display:flex;flex-direction:column;align-items:center;gap:3px}
-.kpi-v{font-size:24px;font-weight:900;color:var(--acc)}
-.kpi-l{font-size:11px;color:var(--text3);font-weight:700}
+.kpi{display:flex;flex-direction:column;align-items:center;gap:2px}
+.kpi-v{font-size:22px;font-weight:900;color:var(--acc)}
+.kpi-l{font-size:10px;color:var(--text3);font-weight:700}
 
-/* ── FILTER PANEL ── */
-.filter-panel-body{display:flex;flex-direction:column;gap:18px}
-.fp-group-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.fp-pills{display:flex;flex-wrap:wrap;gap:7px}
-.fp-pill{padding:7px 13px;border-radius:100px;background:var(--pill);border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t);user-select:none}
-.fp-pill.on{background:var(--pill-act);color:var(--pill-act-t);border-color:var(--pill-act)}
-.fp-pill:active{transform:scale(.93)}
-.fp-range{display:flex;align-items:center;gap:10px}
-.fp-range label{font-size:13px;color:var(--text2);font-weight:600;white-space:nowrap}
+/* TIMELINE */
+.tl-mo{font-size:13px;font-weight:800;color:var(--text3);padding:14px 2px 7px;text-transform:uppercase;letter-spacing:.5px}
+.tl-i{display:flex;gap:12px;margin-bottom:10px;cursor:pointer}
+.tl-left{display:flex;flex-direction:column;align-items:center;width:36px;flex-shrink:0}
+.tl-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg3);border:2px solid var(--border);flex-shrink:0}
+.tl-line{width:2px;flex:1;background:var(--border);margin:3px 0;min-height:10px}
+.tl-card{flex:1;background:var(--card);border-radius:var(--rs);padding:11px 13px;border:1px solid var(--border);transition:var(--t)}
+.tl-card:active{transform:scale(.98)}
+.tl-date{font-size:11px;color:var(--text3);font-weight:600;margin-bottom:2px}
+.tl-name{font-size:15px;font-weight:700}
+.tl-meta{font-size:12px;color:var(--text2);margin-top:2px}
 
-/* ── EMPTY ── */
+/* MAP */
+.map-wrap{padding:14px}
+#mapEl{width:100%;height:calc(100vh - 200px);min-height:300px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.map-err{display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100vh - 200px);min-height:300px;color:var(--text3);font-size:14px;text-align:center;padding:20px;gap:10px}
+
+/* CUISINE EDITOR */
+.ced-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.ced-item:last-child{border-bottom:none}
+.ced-nm{flex:1;font-size:14px;font-weight:600}
+.ced-del{width:28px;height:28px;border-radius:50%;background:var(--red-bg);color:var(--red);border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
+
+/* EMPTY */
 .empty{text-align:center;padding:60px 20px;color:var(--text3)}
 .empty-ico{font-size:48px;margin-bottom:12px}
 .empty-t{font-size:15px;font-weight:600}
 
-/* toast */
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;z-index:400;opacity:0;transition:all .28s ease;pointer-events:none;white-space:nowrap}
+/* TOAST */
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:all .28s ease;pointer-events:none;white-space:nowrap;max-width:90vw}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* view toggle */
-.view-toggle{display:flex;gap:5px}
-.vt-btn{width:32px;height:32px;border-radius:var(--rxs);background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:var(--t);color:var(--text3)}
-.vt-btn.on{background:var(--acc-bg);color:var(--acc)}
-.vt-btn:active{transform:scale(.9)}
 </style>
 </head>
 <body>
-<div id="appShell">
-
-<!-- HEADER -->
+<div id="shell">
 <div class="hdr">
-  <div class="hdr-row1">
+  <div class="hdr1">
     <div class="logo">Taste<em>map</em></div>
     <div class="hdr-btns">
-      <div class="view-toggle">
-        <button class="vt-btn on" id="btnList" onclick="setView('list')" title="Liste">☰</button>
-        <button class="vt-btn" id="btnGrid" onclick="setView('grid')" title="Raster">⊞</button>
+      <div class="vt">
+        <button class="vt-btn on" id="btnList" onclick="setView('list')">☰</button>
+        <button class="vt-btn" id="btnGrid" onclick="setView('grid')">⊞</button>
       </div>
-      <button class="ico-btn" id="btnSort" onclick="cycleSort()" title="Sortieren">⇅</button>
-      <button class="ico-btn" id="btnFilter" onclick="openFilter()" title="Filter">⚙</button>
+      <button class="ico-btn" id="btnSort" onclick="cycleSort()">⇅</button>
+      <button class="ico-btn" onclick="openFilter()">⚙</button>
     </div>
   </div>
-  <div class="search-wrap">
+  <div class="search-w">
     <span class="search-ico">🔍</span>
-    <input class="search-inp" id="searchInp" placeholder="Name, Stadt, Gericht, Notiz …" oninput="render()">
+    <input class="search-inp" id="searchInp" placeholder="Name, Stadt, Küche, Tag …" oninput="render()">
   </div>
-  <div class="filter-bar" id="catFilter"></div>
+  <div class="fbar" id="catFbar"></div>
 </div>
 
-<!-- SCROLL AREA -->
-<div id="scrollArea">
-  <!-- STATS CHIPS -->
-  <div class="stats-row" id="statsRow"></div>
-
-  <!-- MAIN / STATS VIEW -->
+<div id="scroll">
+  <div class="chips" id="chips"></div>
   <div id="mainView"></div>
-  <div id="statsView" style="display:none"></div>
+  <div id="statsView" style="display:none;padding:0 16px 20px"></div>
+  <div id="timelineView" style="display:none;padding:0 16px 20px"></div>
+  <div id="mapView" style="display:none" class="map-wrap"><div id="mapEl"></div></div>
 </div>
 
-<!-- BOTTOM NAV -->
 <nav class="bnav">
   <button class="nav-btn on" id="nb0" onclick="switchTab(0)"><span class="nav-ico">🗺</span><span class="nav-lbl">Entdecken</span></button>
-  <button class="nav-btn"    id="nb1" onclick="switchTab(1)"><span class="nav-ico">❤️</span><span class="nav-lbl">Favoriten</span></button>
-  <button class="fab" onclick="openForm(null)">＋</button>
-  <button class="nav-btn"    id="nb2" onclick="switchTab(2)"><span class="nav-ico">📊</span><span class="nav-lbl">Statistik</span></button>
-  <button class="nav-btn"    id="nb3" onclick="exportCSV()"><span class="nav-ico">📤</span><span class="nav-lbl">Export</span></button>
+  <button class="nav-btn" id="nb1" onclick="switchTab(1)"><span class="nav-ico">❤️</span><span class="nav-lbl">Favoriten</span></button>
+  <button class="fab" onclick="openRestForm(null)">＋</button>
+  <button class="nav-btn" id="nb2" onclick="switchTab(2)"><span class="nav-ico">📅</span><span class="nav-lbl">Verlauf</span></button>
+  <button class="nav-btn" id="nb3" onclick="switchTab(3)"><span class="nav-ico">📊</span><span class="nav-lbl">Statistik</span></button>
+  <button class="nav-btn" id="nb4" onclick="switchTab(4)"><span class="nav-ico">🗺</span><span class="nav-lbl">Karte</span></button>
 </nav>
 </div>
 
-<!-- ── ADD/EDIT SHEET ── -->
-<div class="overlay" id="formOverlay" onclick="overlayClose(event,'formOverlay')">
-<div class="sheet" id="formSheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title" id="formTitle">Neuer Eintrag</div>
-  <input type="hidden" id="editId">
+<!-- ═══ DETAIL MODAL z=300 ═══ -->
+<div class="ov" id="detailOv" onclick="ovBg(event,'detailOv')">
+  <div class="mbox" id="detailBox"></div>
+</div>
 
-  <!-- IMAGE UPLOAD -->
+<!-- ═══ VISIT DETAIL MODAL z=400 ═══ -->
+<div class="ov" id="visitDetailOv" onclick="ovBg(event,'visitDetailOv')">
+  <div class="mbox" id="visitDetailBox"></div>
+</div>
+
+<!-- ═══ VISIT FORM z=500 ═══ -->
+<div class="sheet-ov" id="visitFormOv" onclick="shOvBg(event,'visitFormOv')">
+<div class="sheet">
+  <div class="handle"></div>
+  <button class="sox" onclick="closeOv('visitFormOv')">✕</button>
+  <div class="sh-title" id="vfTitle">Neuer Besuch</div>
+  <input type="hidden" id="vf-rid">
+  <input type="hidden" id="vf-vid">
+
+  <div class="fg"><label class="fl">Datum *</label><input class="fi" id="vf-date" type="date"></div>
+  <div class="fg"><label class="fl">Gericht / Aktivität</label><input class="fi" id="vf-dish" placeholder="z.B. Schnitzel mit Pommes"></div>
+
   <div class="fg">
-    <label class="fl">Foto (optional)</label>
-    <div class="img-upload-area" id="imgArea" onclick="document.getElementById('imgInp').click()">
-      <img id="imgPreview" class="img-preview" style="display:none">
-      <div class="img-upload-icon">📷</div>
-      <div class="img-upload-hint">Tippen zum Foto hinzufügen</div>
+    <label class="fl">Bewertung</label>
+    <div class="slrow"><span class="slnm">🍽 Essen</span><input class="sl-inp" type="range" id="vf-se" min="1" max="10" step="0.5" value="5" oninput="updSc()"><div class="slval" id="sv-e">5</div></div>
+    <div class="slrow"><span class="slnm">✨ Ambiente</span><input class="sl-inp" type="range" id="vf-sa" min="1" max="10" step="0.5" value="5" oninput="updSc()"><div class="slval" id="sv-a">5</div></div>
+    <div class="slrow"><span class="slnm">🤝 Service</span><input class="sl-inp" type="range" id="vf-ss" min="1" max="10" step="0.5" value="5" oninput="updSc()"><div class="slval" id="sv-s">5</div></div>
+    <div class="total-sc"><div class="ts-n" id="ts-n">5.0</div><div class="ts-l">Gesamtnote (Ø)</div></div>
+  </div>
+
+  <div class="fg"><label class="fl">Empfehlung Restaurant</label>
+    <div class="rec-tog">
+      <button class="ropt sly" data-r="Ja" onclick="setRec(this)">👍 Ja</button>
+      <button class="ropt" data-r="Geht so" onclick="setRec(this)">🤷 Geht so</button>
+      <button class="ropt" data-r="Nein" onclick="setRec(this)">👎 Nein</button>
+    </div>
+  </div>
+
+  <div class="fg"><label class="fl">Notizen</label><textarea class="ft" id="vf-notes" placeholder="Eindrücke, Tipps …"></textarea></div>
+
+  <div class="div"></div>
+  <div class="fg"><label class="fl">Gericht bewerten (optional)</label>
+    <div class="frow" style="margin-bottom:8px">
+      <input class="fi" id="vf-dnm" placeholder="Gerichtsname">
+      <div style="display:flex;gap:6px;align-items:center">
+        <input class="fi" id="vf-dsc" type="number" min="1" max="10" step="0.5" placeholder="Note" style="width:70px">
+        <select class="fs" id="vf-drec" style="flex:1">
+          <option value="Ja">👍 Ja</option>
+          <option value="Geht so">🤷 Geht so</option>
+          <option value="Nein">👎 Nein</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-g" style="width:100%;padding:10px" onclick="addDish()">+ Gericht hinzufügen</button>
+    <div id="dishList" style="margin-top:8px" class="dish-list"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-g" onclick="closeOv('visitFormOv')">Abbrechen</button>
+    <button class="btn btn-p" onclick="saveVisit()">Speichern</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ RESTAURANT FORM z=500 ═══ -->
+<div class="sheet-ov" id="restFormOv" onclick="shOvBg(event,'restFormOv')">
+<div class="sheet">
+  <div class="handle"></div>
+  <button class="sox" onclick="closeOv('restFormOv')">✕</button>
+  <div class="sh-title" id="rfTitle">Neuer Eintrag</div>
+  <input type="hidden" id="rf-id">
+
+  <div class="fg">
+    <label class="fl">Foto</label>
+    <div class="img-area" id="imgArea" onclick="document.getElementById('imgInp').click()">
+      <img id="imgPrev" class="img-prev" style="display:none">
+      <div class="img-ico">📷</div>
+      <div class="img-hint">Tippen zum Hinzufügen</div>
     </div>
     <input type="file" id="imgInp" accept="image/*" style="display:none" onchange="handleImg(this)">
-    <button class="img-remove" id="imgRemove" style="display:none" onclick="removeImg(event)">✕</button>
+    <button class="img-rm" id="imgRm" onclick="removeImg(event)">✕</button>
   </div>
 
   <div class="frow">
-    <div class="fg"><label class="fl">Stadt *</label><input class="fi" id="f-city" list="cityList" placeholder="z.B. Wien"></div>
-    <div class="fg"><label class="fl">Datum</label><input class="fi" id="f-date" type="date"></div>
+    <div class="fg"><label class="fl">Stadt *</label><input class="fi" id="rf-city" list="cityList" placeholder="z.B. Wien" oninput="checkDupe()"></div>
+    <div class="fg"><label class="fl">Datum</label><input class="fi" id="rf-date" type="date"></div>
   </div>
   <datalist id="cityList"></datalist>
-
-  <div class="fg"><label class="fl">Name *</label><input class="fi" id="f-name" placeholder="Restaurantname"></div>
-
+  <div class="fg"><label class="fl">Name *</label><input class="fi" id="rf-name" placeholder="Restaurantname" oninput="checkDupe()"></div>
+  <div id="dupeWarn" class="dupe-w" onclick="useDupe()"></div>
   <div class="frow">
-    <div class="fg">
-      <label class="fl">Kategorie</label>
-      <select class="fs" id="f-cat">
+    <div class="fg"><label class="fl">Kategorie</label>
+      <select class="fs" id="rf-cat">
         <option value="Restaurant">🍽 Restaurant</option>
         <option value="Bar">🍹 Bar</option>
         <option value="Club">🎵 Club</option>
@@ -359,710 +476,770 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
         <option value="Kultur">🎨 Kultur</option>
       </select>
     </div>
-    <div class="fg">
-      <label class="fl">Preis</label>
-      <select class="fs" id="f-price">
+    <div class="fg"><label class="fl">Preis</label>
+      <select class="fs" id="rf-price">
         <option value="€">€ Günstig</option>
         <option value="€€" selected>€€ Mittel</option>
         <option value="€€€">€€€ Gehoben</option>
-        <option value="">– unbekannt</option>
+        <option value="">– Unbekannt</option>
       </select>
     </div>
   </div>
-
-  <div class="fg"><label class="fl">Gericht / Aktivität</label><input class="fi" id="f-dish" placeholder="z.B. Schnitzel mit Pommes"></div>
-
-  <!-- SCORES -->
-  <div class="fg">
-    <label class="fl">Bewertung</label>
-    <div class="slider-group">
-      <div class="slider-row">
-        <span class="slider-name">🍽 Essen</span>
-        <input class="slider" type="range" id="f-s-essen" min="1" max="10" step="0.5" value="5" oninput="updateScores()">
-        <div class="slider-val" id="sv-essen">5</div>
-      </div>
-      <div class="slider-row">
-        <span class="slider-name">✨ Ambiente</span>
-        <input class="slider" type="range" id="f-s-amb" min="1" max="10" step="0.5" value="5" oninput="updateScores()">
-        <div class="slider-val" id="sv-amb">5</div>
-      </div>
-      <div class="slider-row">
-        <span class="slider-name">🤝 Service</span>
-        <input class="slider" type="range" id="f-s-svc" min="1" max="10" step="0.5" value="5" oninput="updateScores()">
-        <div class="slider-val" id="sv-svc">5</div>
-      </div>
-    </div>
-    <div class="total-score" id="totalScoreBox">
-      <div class="ts-num" id="totalScoreNum">5.0</div>
-      <div class="ts-lbl">Gesamtnote (Durchschnitt)</div>
+  <div class="fg"><label class="fl">Küche / Art</label>
+    <select class="fs" id="rf-cuisine"><option value="">– Keine Angabe</option></select>
+    <div style="font-size:12px;color:var(--acc);cursor:pointer;margin-top:5px;font-weight:600" onclick="openCuisineEditor()">+ Küchen bearbeiten</div>
+  </div>
+  <div class="fg"><label class="fl">Website / Instagram</label><input class="fi" id="rf-web" placeholder="https://…"></div>
+  <div class="fg"><label class="fl">Google Maps Link</label><input class="fi" id="rf-maps" placeholder="https://maps.app.goo.gl/…"></div>
+  <div class="fg"><label class="fl">Tags (Enter zum Hinzufügen)</label>
+    <div class="tags-w" id="tagsW" onclick="document.getElementById('tagsInp').focus()">
+      <input class="tinp" id="tagsInp" placeholder="z.B. Date Night …" onkeydown="tagKD(event)">
     </div>
   </div>
-
-  <div class="fg">
-    <label class="fl">Empfehlung</label>
-    <div class="rec-tog">
-      <button class="rec-opt sel-y" data-r="Ja" onclick="setRec(this,'Ja')">👍 Ja</button>
-      <button class="rec-opt" data-r="Geht so" onclick="setRec(this,'Geht so')">🤷 Geht so</button>
-      <button class="rec-opt" data-r="Nein" onclick="setRec(this,'Nein')">👎 Nein</button>
-    </div>
-  </div>
-
-  <div class="fg"><label class="fl">Notizen</label><textarea class="ft" id="f-notes" placeholder="Eindrücke, Tipps, Besonderheiten …"></textarea></div>
-  <div class="fg"><label class="fl">Google Maps Link</label><input class="fi" id="f-maps" placeholder="https://maps.app.goo.gl/…"></div>
-
   <div class="btn-row">
-    <button class="btn btn-ghost" onclick="closeOverlay('formOverlay')">Abbrechen</button>
-    <button class="btn btn-primary" onclick="saveEntry()">Speichern</button>
+    <button class="btn btn-g" onclick="closeOv('restFormOv')">Abbrechen</button>
+    <button class="btn btn-p" onclick="saveRest()">Speichern</button>
   </div>
 </div>
 </div>
 
-<!-- ── DETAIL SHEET ── -->
-<div class="overlay" id="detailOverlay" onclick="overlayClose(event,'detailOverlay')">
-<div class="sheet" id="detailSheet"></div>
-</div>
-
-<!-- ── FILTER SHEET ── -->
-<div class="overlay" id="filterOverlay" onclick="overlayClose(event,'filterOverlay')">
+<!-- ═══ FILTER z=500 ═══ -->
+<div class="sheet-ov" id="filterOv" onclick="shOvBg(event,'filterOv')">
 <div class="sheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">Filter & Sortierung</div>
-  <div class="filter-panel-body">
-    <div>
-      <div class="fp-group-title">📍 Städte</div>
-      <div class="fp-pills" id="fp-cities"></div>
+  <div class="handle"></div>
+  <button class="sox" onclick="closeOv('filterOv')">✕</button>
+  <div class="sh-title">Filter</div>
+  <div class="fp-g"><div class="fp-t">📍 Städte</div><div class="fp-pills" id="fp-cities"></div></div>
+  <div class="fp-g"><div class="fp-t">🗂 Kategorien</div><div class="fp-pills" id="fp-cats"></div></div>
+  <div class="fp-g"><div class="fp-t">🍜 Küche</div><div class="fp-pills" id="fp-cuisines"></div></div>
+  <div class="fp-g"><div class="fp-t">👍 Empfehlung</div>
+    <div class="fp-pills">
+      <button class="fp-p" data-r="Ja" onclick="togS(fRec,'Ja',this);render()">👍 Ja</button>
+      <button class="fp-p" data-r="Geht so" onclick="togS(fRec,'Geht so',this);render()">🤷 Geht so</button>
+      <button class="fp-p" data-r="Nein" onclick="togS(fRec,'Nein',this);render()">👎 Nein</button>
     </div>
-    <div>
-      <div class="fp-group-title">🗂 Kategorien</div>
-      <div class="fp-pills" id="fp-cats"></div>
+  </div>
+  <div class="fp-g"><div class="fp-t">💰 Preis</div>
+    <div class="fp-pills">
+      <button class="fp-p" onclick="togS(fPrice,'€',this);render()">€</button>
+      <button class="fp-p" onclick="togS(fPrice,'€€',this);render()">€€</button>
+      <button class="fp-p" onclick="togS(fPrice,'€€€',this);render()">€€€</button>
     </div>
-    <div>
-      <div class="fp-group-title">👍 Empfehlung</div>
-      <div class="fp-pills" id="fp-recs">
-        <button class="fp-pill" data-r="Ja" onclick="toggleFpRec(this)">👍 Ja</button>
-        <button class="fp-pill" data-r="Geht so" onclick="toggleFpRec(this)">🤷 Geht so</button>
-        <button class="fp-pill" data-r="Nein" onclick="toggleFpRec(this)">👎 Nein</button>
-      </div>
-    </div>
-    <div>
-      <div class="fp-group-title">💰 Preisklasse</div>
-      <div class="fp-pills" id="fp-prices">
-        <button class="fp-pill" data-p="€" onclick="toggleFpPrice(this)">€</button>
-        <button class="fp-pill" data-p="€€" onclick="toggleFpPrice(this)">€€</button>
-        <button class="fp-pill" data-p="€€€" onclick="toggleFpPrice(this)">€€€</button>
-      </div>
-    </div>
-    <div>
-      <div class="fp-group-title">⭐ Gesamtnote min.</div>
-      <div class="fp-range">
-        <input class="slider" type="range" id="fp-score-min" min="1" max="10" step="0.5" value="1" oninput="document.getElementById('fp-score-val').textContent=this.value;render()">
-        <label id="fp-score-val">1</label>
-      </div>
+  </div>
+  <div class="fp-g"><div class="fp-t">🏷 Tags</div><div class="fp-pills" id="fp-tags"></div></div>
+  <div class="fp-g"><div class="fp-t">⭐ Mindest-Note</div>
+    <div class="fp-range">
+      <input class="sl-inp" style="flex:1" type="range" id="fp-sc" min="1" max="10" step="0.5" value="1" oninput="fScMin=parseFloat(this.value);document.getElementById('fp-scv').textContent=this.value;render()">
+      <label id="fp-scv">1</label>
     </div>
   </div>
   <div class="btn-row">
-    <button class="btn btn-ghost" onclick="resetFilter()">Zurücksetzen</button>
-    <button class="btn btn-primary" onclick="closeOverlay('filterOverlay')">Anwenden</button>
+    <button class="btn btn-g" onclick="resetFilter()">Zurücksetzen</button>
+    <button class="btn btn-p" onclick="closeOv('filterOv')">Anwenden</button>
   </div>
 </div>
 </div>
 
-<!-- TOAST -->
+<!-- ═══ CUISINE EDITOR z=600 ═══ -->
+<div class="sheet-ov" id="cuisineOv" onclick="shOvBg(event,'cuisineOv')">
+<div class="sheet">
+  <div class="handle"></div>
+  <button class="sox" onclick="closeOv('cuisineOv')">✕</button>
+  <div class="sh-title">Küchen bearbeiten</div>
+  <div id="cedList"></div>
+  <div class="frow" style="margin-top:12px">
+    <input class="fi" id="newCuisInp" placeholder="z.B. 🇯🇵 Japanisch">
+    <button class="btn btn-p" style="flex:0;padding:11px 14px;white-space:nowrap" onclick="addCuisine()">+ Hinzufügen</button>
+  </div>
+  <div class="btn-row"><button class="btn btn-p" onclick="closeOv('cuisineOv');populateCuisineSel()">Fertig</button></div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-/* ══════════════════════════════════════════════════════════
-   DATA
-══════════════════════════════════════════════════════════ */
+/* ══════════════ DATA MODEL ══════════════
+  Restaurant: {id,city,cat,name,cuisine,price,maps,web,img,tags[],fav,visits[]}
+  Visit:      {id,date,dish,sE,sA,sS,rec,notes,dishes:[{name,score,rec}]}
+═════════════════════════════════════════ */
 const CAT_ICONS={Restaurant:'🍽',Bar:'🍹',Club:'🎵',Cafe:'☕',Hotel:'🏨',Geschäft:'🛍',Kultur:'🎨'};
-let CATS=['Restaurant','Bar','Club','Cafe','Hotel','Geschäft','Kultur'];
+const CATS=['Restaurant','Bar','Club','Cafe','Hotel','Geschäft','Kultur'];
+let CUISINES=['🇩🇪 Deutsch','🇦🇹 Österreichisch','🇮🇹 Italienisch','🇯🇵 Japanisch','🇹🇷 Türkisch','🇲🇽 Mexikanisch','🇮🇳 Indisch','🇨🇳 Chinesisch','🇬🇷 Griechisch','🇫🇷 Französisch','🇺🇸 Amerikanisch','🇹🇭 Thailändisch','🇻🇳 Vietnamesisch','🇱🇧 Libanesisch','🍣 Sushi','🍕 Pizza','🥩 Steakhouse','🍔 Burger','🍺 Brauhaus/Biergarten','☕ Café/Bäckerei','🍸 Bar/Cocktails','🌍 International'];
+
+let nRid=21,nVid=200;
+function nvsc(o){return{id:o.id??nVid++,date:o.date||'',dish:o.dish||'',sE:o.sE??null,sA:o.sA??null,sS:o.sS??null,rec:o.rec||'Ja',notes:o.notes||'',dishes:o.dishes||[]}}
+function vSc(v){const a=[v.sE,v.sA,v.sS].filter(x=>x!=null);return a.length?parseFloat((a.reduce((s,x)=>s+x,0)/a.length).toFixed(1)):null}
+function rLV(r){return r.visits.length?[...r.visits].sort((a,b)=>new Date(b.date)-new Date(a.date))[0]:null}
+function rLSc(r){const lv=rLV(r);return lv?vSc(lv):null}
+function rLRec(r){const lv=rLV(r);return lv?lv.rec:'–'}
+function trend(r){
+  if(r.visits.length<2)return null;
+  const s=[...r.visits].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const a=vSc(s[s.length-2]),b=vSc(s[s.length-1]);
+  if(a==null||b==null)return null;
+  if(b>a+0.4)return{i:'↑',c:'tu'};if(b<a-0.4)return{i:'↓',c:'td'};return{i:'→',c:'te'};
+}
+function mkR(city,cat,name,cuisine,price,maps,web,img,tags,fav,visits){
+  return{id:nRid++,city,cat,name,cuisine:cuisine||'',price,maps:maps||'',web:web||'',img:img||null,tags:tags||[],fav:fav||false,visits:visits.map(nvsc)}
+}
+function mkV(date,dish,sE,sA,sS,rec,notes){return nvsc({date,dish,sE,sA,sS,rec,notes,dishes:[]})}
 
 let DB=[
-  {id:1,date:'2023-01-05',city:'Wien',cat:'Cafe',name:'Zum schwarzen Kamel',dish:'Weißwein',sEssen:null,sAmb:null,sSvc:null,rec:'Ja',price:'€€',notes:'Ca. 15 Min. warten. Kellner freundlich aber kühl. Wein super. Atmosphäre locker.',maps:'https://goo.gl/maps/NBvd4oheCyHpEPsb7',fav:false,img:null},
-  {id:2,date:'2023-01-05',city:'Wien',cat:'Geschäft',name:'Wein & CO Stephansplatz',dish:'Weinhandlung',sEssen:null,sAmb:null,sSvc:null,rec:'Ja',price:'€€',notes:'Top Beratung. Viel Auswahl.',maps:'https://goo.gl/maps/xUEwCbjAMyYzx8MbA',fav:false,img:null},
-  {id:3,date:'2023-01-05',city:'Wien',cat:'Restaurant',name:'Zum Goldenen Würstel',dish:'Käsekrainer in Baguette',sEssen:6.8,sAmb:6,sSvc:6.5,rec:'Ja',price:'€',notes:'Sehr lecker. Günstig.',maps:'https://goo.gl/maps/XTZqteaMTCHhypaV6',fav:false,img:null},
-  {id:4,date:'2023-01-05',city:'Wien',cat:'Bar',name:'Billabong Australian Pub',dish:'Club Sandwich + Aperol',sEssen:6.5,sAmb:7,sSvc:7.5,rec:'Ja',price:'€',notes:'Entspannte Atmosphäre. Freundliche Mitarbeiter. Sandwich lecker.',maps:'https://goo.gl/maps/QF8A9Azm7kZdYNUL7',fav:false,img:null},
-  {id:5,date:'2023-01-06',city:'Wien',cat:'Kultur',name:'Albertina Museum',dish:'Basquiat Ausstellung',sEssen:null,sAmb:8,sSvc:7,rec:'Ja',price:'€€',notes:'Sehr voll da Feiertag. Ausstellung sehr interessant.',maps:'https://goo.gl/maps/mbMhf2TDmGBe8MZd8',fav:false,img:null},
-  {id:6,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Figlmüller Bäckerstraße',dish:'Schnitzel vom Schwein + Pommes',sEssen:9.6,sAmb:8,sSvc:8.5,rec:'Ja',price:'€€',notes:'Das bisher beste Schnitzel! Nur mit Zitrone genießen. Reservieren! Ca. 20 Min. Schlange.',maps:'https://goo.gl/maps/UrNJm3QPJGxeufbH6',fav:true,img:null},
-  {id:7,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Gasthaus Pöschl',dish:'Grießnocherlsuppe, Leber, Rostbraten',sEssen:8.1,sAmb:7.5,sSvc:8,rec:'Ja',price:'€€',notes:'Üppig und lecker. Entspannte Atmosphäre. Reservierung notwendig.',maps:'https://goo.gl/maps/4M3FA9pX4dxSUroCA',fav:false,img:null},
-  {id:8,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleines Cafe',dish:'Cuba Libre + Kurze',sEssen:null,sAmb:8,sSvc:9,rec:'Ja',price:'€€',notes:'Super Atmosphäre. Mitarbeiter top.',maps:'https://goo.gl/maps/xwuGkX1GDGRkGk618',fav:false,img:null},
-  {id:9,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Loos American Bar',dish:'Cuba Libre',sEssen:null,sAmb:8.5,sSvc:7,rec:'Ja',price:'€€',notes:'Zentrale Lage. Gute Drinks, stark gemixt.',maps:'https://goo.gl/maps/oW6y2s4fvPw5JyAD7',fav:false,img:null},
-  {id:10,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleinod',dish:'Champagner',sEssen:null,sAmb:7,sSvc:7,rec:'Ja',price:'€€',notes:'War lecker. Bar sehr voll.',maps:'https://goo.gl/maps/5NvtfNXrqMgd77b36',fav:false,img:null},
-  {id:11,date:'2023-01-06',city:'Wien',cat:'Club',name:'SASS Music Club',dish:'Bacardi Boot',sEssen:null,sAmb:6,sSvc:6,rec:'Geht so',price:'€€',notes:'Preislich teuer. Gute Musik. Kleiner Club.',maps:'https://goo.gl/maps/1nfyH2fNsnTmavms9',fav:false,img:null},
-  {id:12,date:'2023-01-05',city:'Wien',cat:'Hotel',name:'Zoku Vienna',dish:'Zimmer für 2 mit Balkon',sEssen:null,sAmb:9,sSvc:8.5,rec:'Ja',price:'€€',notes:'Sehr schön, neu. Freundlich. Parkplatz 25€/Tag. Schöne Dachterrasse. Etwas außerhalb.',maps:'https://goo.gl/maps/BjHeaVBYte7CDEhB6',fav:false,img:null},
-  {id:13,date:'2023-05-28',city:'München',cat:'Restaurant',name:'Nebenan Brunch & Bar',dish:'Nudeln mit Trüffelsauce',sEssen:7.2,sAmb:7.5,sSvc:8.5,rec:'Ja',price:'€€',notes:'Sehr freundlich. Preislich top. Extrawünsche möglich.',maps:'https://goo.gl/maps/ZUhmN1QRQVHMN8YD7',fav:false,img:null},
-  {id:14,date:'2023-05-28',city:'München',cat:'Club',name:'Lucky Who',dish:'Gin',sEssen:null,sAmb:6,sSvc:6,rec:'Geht so',price:'€€',notes:'Outdoor-Club. Teuer. DJ eher mies.',maps:'https://goo.gl/maps/Mrh5ywh4vSkm9zzAA',fav:false,img:null},
-  {id:15,date:'2023-05-29',city:'München',cat:'Restaurant',name:'Max Emanuel Brauerei',dish:'Schnitzel + Bratkartoffeln + Spezi',sEssen:8.5,sAmb:9,sSvc:7.5,rec:'Ja',price:'€€',notes:'Sehr lecker. Idyllischer Biergarten mitten in der Stadt. Teuer aber wert.',maps:'https://goo.gl/maps/RiyNDfeg811SCSmU9',fav:true,img:null},
-  {id:16,date:'2023-08-26',city:'Regensburg',cat:'Bar',name:'Palletti-Bar',dish:'–',sEssen:null,sAmb:6,sSvc:6,rec:'Geht so',price:'€€',notes:'Kleine Bar. Entspannte Atmosphäre. Nichts besonderes.',maps:'https://maps.app.goo.gl/JxBiGsr1Fk3w5Mja6',fav:false,img:null},
-  {id:17,date:'2023-08-27',city:'Regensburg',cat:'Bar',name:'da Silva Bar & Lounge',dish:'–',sEssen:null,sAmb:3,sSvc:4,rec:'Nein',price:'',notes:'Viel zu heiß. Direkt umgedreht.',maps:'https://maps.app.goo.gl/Yh5tN5uykdLVray18',fav:false,img:null},
-  {id:18,date:'2023-08-27',city:'Regensburg',cat:'Club',name:'0941 Bar',dish:'–',sEssen:null,sAmb:8,sSvc:7,rec:'Ja',price:'',notes:'Sehr gute Stimmung. Atmosphäre top.',maps:'https://maps.app.goo.gl/cuWTX5DKdyCb9Zf9A',fav:false,img:null},
-  {id:19,date:'2023-08-26',city:'Regensburg',cat:'Restaurant',name:'Kneitinger Keller',dish:'Leberknödelsuppe',sEssen:6.5,sAmb:7,sSvc:6.5,rec:'Ja',price:'€€',notes:'Essen ok. Biergarten schön.',maps:'https://goo.gl/maps/qiAgiDUAZgf8LEnn6',fav:false,img:null},
-  {id:20,date:'2023-12-07',city:'Bärnau',cat:'Restaurant',name:'Gasthof zur Post',dish:'Schnitzel, Leberknödelsuppe, Apfelstrudel',sEssen:7.6,sAmb:7,sSvc:8,rec:'Ja',price:'€€',notes:'Schnitzel sehr gut! Pommes top gewürzt. Große Portionen.',maps:'https://maps.app.goo.gl/hD8ugjqDcnU3Rrpj7',fav:false,img:null}
+  mkR('Wien','Cafe','Zum schwarzen Kamel','🍸 Bar/Cocktails','€€','https://goo.gl/maps/NBvd4oheCyHpEPsb7','',null,['Wein'],false,[mkV('2023-01-05','Weißwein',null,7,8,'Ja','Ca. 15 Min. warten. Kellner kühl aber freundlich. Wein super.')]),
+  mkR('Wien','Geschäft','Wein & CO Stephansplatz','🌍 International','€€','https://goo.gl/maps/xUEwCbjAMyYzx8MbA','',null,[],false,[mkV('2023-01-05','Weinhandlung',null,null,null,'Ja','Top Beratung. Viel Auswahl.')]),
+  mkR('Wien','Restaurant','Zum Goldenen Würstel','🇩🇪 Deutsch','€','https://goo.gl/maps/XTZqteaMTCHhypaV6','',null,['Snack'],false,[mkV('2023-01-05','Käsekrainer in Baguette',6.8,6,6.5,'Ja','Sehr lecker.')]),
+  mkR('Wien','Bar','Billabong Australian Pub','🇺🇸 Amerikanisch','€','https://goo.gl/maps/QF8A9Azm7kZdYNUL7','',null,['Sport'],false,[mkV('2023-01-05','Club Sandwich + Aperol',6.5,7,7.5,'Ja','Entspannte Atmosphäre.')]),
+  mkR('Wien','Kultur','Albertina Museum','🌍 International','€€','https://goo.gl/maps/mbMhf2TDmGBe8MZd8','',null,['Kunst'],false,[mkV('2023-01-06','Basquiat Ausstellung',null,8,7,'Ja','Sehr interessant.')]),
+  mkR('Wien','Restaurant','Figlmüller Bäckerstraße','🇦🇹 Österreichisch','€€','https://goo.gl/maps/UrNJm3QPJGxeufbH6','',null,['Schnitzel','Muss'],true,[mkV('2023-01-06','Schnitzel + Pommes',9.6,8,8.5,'Ja','Das beste Schnitzel! Reservieren!')]),
+  mkR('Wien','Restaurant','Gasthaus Pöschl','🇦🇹 Österreichisch','€€','https://goo.gl/maps/4M3FA9pX4dxSUroCA','',null,['Wiener Küche'],false,[mkV('2023-01-06','Grießnocherlsuppe, Leber',8.1,7.5,8,'Ja','Üppig und lecker.')]),
+  mkR('Wien','Bar','Kleines Cafe','🍸 Bar/Cocktails','€€','https://goo.gl/maps/xwuGkX1GDGRkGk618','',null,[],false,[mkV('2023-01-06','Cuba Libre + Kurze',null,8,9,'Ja','Super Atmosphäre.')]),
+  mkR('Wien','Bar','Loos American Bar','🍸 Bar/Cocktails','€€','https://goo.gl/maps/oW6y2s4fvPw5JyAD7','',null,['Design'],false,[mkV('2023-01-06','Cuba Libre',null,8.5,7,'Ja','Gute Drinks.')]),
+  mkR('Wien','Bar','Kleinod','🍸 Bar/Cocktails','€€','https://goo.gl/maps/5NvtfNXrqMgd77b36','',null,[],false,[mkV('2023-01-06','Champagner',null,7,7,'Ja','Bar sehr voll.')]),
+  mkR('Wien','Club','SASS Music Club','🍸 Bar/Cocktails','€€','https://goo.gl/maps/1nfyH2fNsnTmavms9','',null,[],false,[mkV('2023-01-06','Bacardi Boot',null,6,6,'Geht so','Preislich teuer.')]),
+  mkR('Wien','Hotel','Zoku Vienna','🌍 International','€€','https://goo.gl/maps/BjHeaVBYte7CDEhB6','',null,['Hotel'],false,[mkV('2023-01-05','Zimmer mit Balkon',null,9,8.5,'Ja','Sehr schön. Dachterrasse.')]),
+  mkR('München','Restaurant','Nebenan Brunch & Bar','🌍 International','€€','https://goo.gl/maps/ZUhmN1QRQVHMN8YD7','',null,['Brunch'],false,[mkV('2023-05-28','Nudeln mit Trüffelsauce',7.2,7.5,8.5,'Ja','Sehr freundlich.')]),
+  mkR('München','Club','Lucky Who','🍸 Bar/Cocktails','€€','https://goo.gl/maps/Mrh5ywh4vSkm9zzAA','',null,[],false,[mkV('2023-05-28','Gin',null,6,6,'Geht so','DJ eher mies.')]),
+  mkR('München','Restaurant','Max Emanuel Brauerei','🇩🇪 Deutsch','€€','https://goo.gl/maps/RiyNDfeg811SCSmU9','',null,['Biergarten'],true,[mkV('2023-05-29','Schnitzel + Bratkartoffeln',8.5,9,7.5,'Ja','Sehr lecker. Idyllischer Biergarten.')]),
+  mkR('Regensburg','Bar','Palletti-Bar','🍸 Bar/Cocktails','€€','https://maps.app.goo.gl/JxBiGsr1Fk3w5Mja6','',null,[],false,[mkV('2023-08-26','–',null,6,6,'Geht so','Kleine Bar.')]),
+  mkR('Regensburg','Bar','da Silva Bar & Lounge','🍸 Bar/Cocktails','','https://maps.app.goo.gl/Yh5tN5uykdLVray18','',null,[],false,[mkV('2023-08-27','–',null,3,4,'Nein','Viel zu heiß.')]),
+  mkR('Regensburg','Club','0941 Bar','🍸 Bar/Cocktails','','https://maps.app.goo.gl/cuWTX5DKdyCb9Zf9A','',null,[],false,[mkV('2023-08-27','–',null,8,7,'Ja','Super Stimmung.')]),
+  mkR('Regensburg','Restaurant','Kneitinger Keller','🇩🇪 Deutsch','€€','https://goo.gl/maps/qiAgiDUAZgf8LEnn6','',null,['Biergarten'],false,[mkV('2023-08-26','Leberknödelsuppe',6.5,7,6.5,'Ja','Biergarten schön.')]),
+  mkR('Bärnau','Restaurant','Gasthof zur Post','🇩🇪 Deutsch','€€','https://maps.app.goo.gl/hD8ugjqDcnU3Rrpj7','',null,[],false,[mkV('2023-12-07','Schnitzel + Leberknödelsuppe',7.6,7,8,'Ja','Schnitzel sehr gut!')])
 ];
-let nextId=21;
 
 /* ── State ── */
-let viewMode='list';
-let sortMode='date';
-let activeTab=0;
-let selectedRec='Ja';
-let filterCities=new Set();
-let filterCats=new Set();
-let filterRecs=new Set();
-let filterPrices=new Set();
-let filterScoreMin=1;
-let formImg=null; // base64
+let viewMode='list',sortMode='date',activeTab=0,selRec='Ja';
+let fCities=new Set(),fCats=new Set(),fRec=new Set(),fPrice=new Set(),fCuisines=new Set(),fTags=new Set(),fScMin=1;
+let formImg=null,formTags=[],dupeRid=null;
+let formDishes=[]; // [{name,score,rec}]
+let leafMap=null;
 
-/* ── Computed score ── */
-function getScore(e){
-  const vals=[e.sEssen,e.sAmb,e.sSvc].filter(v=>v!=null);
-  if(!vals.length) return null;
-  return parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1));
-}
-function scoreClass(s){
-  if(s==null) return 'sn';
-  if(s>=8) return 'sh';
-  if(s>=6) return 'sm';
-  return 'sl';
-}
-function recClass(r){return r==='Ja'?'ry':r==='Nein'?'rn':'rm'}
-function fmtDate(d){if(!d)return '';const[y,m,dd]=d.split('-');return `${dd}.${m}.${y}`}
-function catIcon(c){return CAT_ICONS[c]||'📍'}
-
-/* ── Cities dynamic ── */
-function allCities(){return[...new Set(DB.map(e=>e.city))].sort()}
+/* ── Helpers ── */
+function scCls(s){if(s==null)return'sn';if(s>=8)return'sh';if(s>=6)return'sm';return'sl'}
+function recCls(r){return r==='Ja'?'ry':r==='Nein'?'rn':'rm'}
+function fmtD(d){if(!d)return'';const[y,m,dd]=d.split('-');return`${dd}.${m}.${y}`}
+function catIco(c){return CAT_ICONS[c]||'📍'}
+function allCities(){return[...new Set(DB.map(r=>r.city))].sort()}
+function allTags(){return[...new Set(DB.flatMap(r=>r.tags))].sort()}
+function allCuisinesUsed(){return[...new Set(DB.map(r=>r.cuisine).filter(Boolean))].sort()}
+function saveLS(){try{localStorage.setItem('tm6',JSON.stringify({DB,nRid,nVid,CUISINES}))}catch(e){}}
+function loadLS(){try{const d=JSON.parse(localStorage.getItem('tm6'));if(d){DB=d.DB;nRid=d.nRid;nVid=d.nVid;if(d.CUISINES)CUISINES=d.CUISINES;}}catch(e){}}
+function togS(set,val,btn){if(set.has(val)){set.delete(val);btn?.classList.remove('on');}else{set.add(val);btn?.classList.add('on');}}
 
 /* ── FILTER ── */
 function getFiltered(){
   const q=document.getElementById('searchInp').value.toLowerCase();
-  return DB.filter(e=>{
-    if(activeTab===1 && !e.fav) return false;
-    if(filterCities.size && !filterCities.has(e.city)) return false;
-    if(filterCats.size && !filterCats.has(e.cat)) return false;
-    if(filterRecs.size && !filterRecs.has(e.rec)) return false;
-    if(filterPrices.size){
-      const p=e.price||'';
-      if(![...filterPrices].some(fp=>p.includes(fp))) return false;
-    }
-    const sc=getScore(e);
-    if(sc!=null && sc<filterScoreMin) return false;
-    if(q&&!`${e.name} ${e.city} ${e.dish} ${e.notes}`.toLowerCase().includes(q)) return false;
+  return DB.filter(r=>{
+    if(activeTab===1&&!r.fav)return false;
+    if(fCities.size&&!fCities.has(r.city))return false;
+    if(fCats.size&&!fCats.has(r.cat))return false;
+    if(fCuisines.size&&!fCuisines.has(r.cuisine))return false;
+    if(fRec.size&&!fRec.has(rLRec(r)))return false;
+    if(fPrice.size){const p=r.price||'';if(![...fPrice].some(fp=>p.includes(fp)))return false;}
+    if(fTags.size&&![...fTags].every(t=>r.tags.includes(t)))return false;
+    const sc=rLSc(r);if(sc!=null&&sc<fScMin)return false;
+    if(q&&!`${r.name} ${r.city} ${r.cuisine} ${r.tags.join(' ')} ${r.visits.map(v=>v.dish+' '+v.notes).join(' ')}`.toLowerCase().includes(q))return false;
     return true;
   });
 }
 function getSorted(arr){
-  if(sortMode==='score') return[...arr].sort((a,b)=>(getScore(b)||0)-(getScore(a)||0));
-  if(sortMode==='name') return[...arr].sort((a,b)=>a.name.localeCompare(b.name,'de'));
-  return[...arr].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(sortMode==='score')return[...arr].sort((a,b)=>(rLSc(b)||0)-(rLSc(a)||0));
+  if(sortMode==='name')return[...arr].sort((a,b)=>a.name.localeCompare(b.name,'de'));
+  return[...arr].sort((a,b)=>new Date(rLV(b)?.date||0)-new Date(rLV(a)?.date||0));
+}
+
+/* ── TREND LINE SVG (inline mini chart) ── */
+function trendLineSVG(r){
+  if(r.visits.length<2)return'';
+  const chron=[...r.visits].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const scores=chron.map(vSc);
+  const valid=scores.filter(x=>x!=null);
+  if(valid.length<2)return'';
+  const W=70,H=20,pad=3;
+  const cW=W-pad*2,cH=H-pad*2;
+  const n=chron.length;
+  const xP=i=>pad+i*(cW/(n-1));
+  const yP=s=>pad+cH-((s-1)/9)*cH;
+  const col=valid[valid.length-1]>valid[0]?'var(--green)':valid[valid.length-1]<valid[0]?'var(--red)':'var(--text3)';
+  let pts=[];
+  chron.forEach((v,i)=>{const s=vSc(v);if(s!=null)pts.push(`${xP(i)},${yP(s)}`);});
+  if(pts.length<2)return'';
+  return`<svg class="trendline-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${chron.map((v,i)=>{const s=vSc(v);return s!=null?`<circle cx="${xP(i)}" cy="${yP(s)}" r="${i===n-1?3:2}" fill="${col}"/>`:''}).join('')}
+  </svg>`;
 }
 
 /* ── RENDER ── */
 function render(){
-  if(activeTab===2){renderStats();return}
+  if(activeTab===3){renderStats();return;}
+  if(activeTab===2){renderTimeline();return;}
+  if(activeTab===4){renderMap();return;}
   const filtered=getSorted(getFiltered());
-  renderStatChips(filtered);
+  renderChips(filtered);
   renderCatBar();
-
   const mv=document.getElementById('mainView');
-  if(!filtered.length){
-    mv.innerHTML=`<div class="empty"><div class="empty-ico">🍽</div><div class="empty-t">Keine Einträge gefunden</div></div>`;
-    return;
-  }
-
-  // group by city
+  if(!filtered.length){mv.innerHTML=`<div class="empty"><div class="empty-ico">🍽</div><div class="empty-t">Keine Einträge</div></div>`;return;}
   const groups={};
-  filtered.forEach(e=>{
-    if(!groups[e.city]) groups[e.city]=[];
-    groups[e.city].push(e);
-  });
-
+  filtered.forEach(r=>{if(!groups[r.city])groups[r.city]=[];groups[r.city].push(r);});
   let html='';
   Object.entries(groups).forEach(([city,items])=>{
-    html+=`<div class="city-hdr"><span class="city-name">${city}</span><span class="city-cnt">${items.length}</span></div>`;
+    html+=`<div class="city-hdr"><span class="city-nm">${city}</span><span class="city-ct">${items.length}</span></div>`;
     if(viewMode==='grid'){
-      html+=`<div class="grid-wrap">`;
-      items.forEach((e,i)=>{html+=renderGridCard(e,i)});
-      html+=`</div>`;
+      html+=`<div class="grid-w">`;items.forEach((r,i)=>{html+=gridCard(r,i)});html+=`</div>`;
     } else {
-      html+=`<div class="list-wrap">`;
-      items.forEach((e,i)=>{html+=renderListCard(e,i)});
-      html+=`</div>`;
+      html+=`<div class="list-w">`;items.forEach((r,i)=>{html+=listCard(r,i)});html+=`</div>`;
     }
   });
   mv.innerHTML=html;
 }
 
-function renderListCard(e,i){
-  const sc=getScore(e);
-  const scDisp=sc!=null?sc:'●';
-  const scCls=scoreClass(sc);
-  const imgHtml=e.img?`<img class="card-img-strip" src="${e.img}">`:'' ;
-  const subHtml=e.sEssen!=null?`<div class="sub-scores">
-    <div class="sub-s"><div class="sub-s-val">${e.sEssen}</div><div class="sub-s-lbl">Essen</div></div>
-    <div class="sub-s"><div class="sub-s-val">${e.sAmb??'–'}</div><div class="sub-s-lbl">Ambien.</div></div>
-    <div class="sub-s"><div class="sub-s-val">${e.sSvc??'–'}</div><div class="sub-s-lbl">Service</div></div>
-  </div>`:'' ;
-  return`<div class="entry-card" onclick="openDetail(${e.id})" style="animation-delay:${i*.04}s">
-    ${imgHtml}
-    <div class="card-inner">
-      <div class="card-top-row">
-        <div class="card-name">${e.name}</div>
-        <div class="score-bubble ${scCls}">${scDisp}${sc!=null?'<span class="sub-lbl">/10</span>':''}</div>
+function listCard(r,i){
+  const lv=rLV(r);const lsc=rLSc(r);const tr=trend(r);
+  return`<div class="ecard" onclick="openDetail(${r.id})" style="animation-delay:${i*.04}s">
+    ${r.img?`<img class="ecard-img" src="${r.img}">`:''}
+    <div class="ecard-body">
+      <div class="ecard-top">
+        <div class="ecard-name">${r.name}</div>
+        <div class="score-bub ${scCls(lsc)}">${lsc??'●'}${lsc!=null?`<span class="sl">/10</span>`:''}</div>
       </div>
-      <div class="card-meta-row">
-        <span class="tag city">📍 ${e.city}</span>
-        <span class="tag">${catIcon(e.cat)} ${e.cat}</span>
-        ${e.date?`<span class="tag">${fmtDate(e.date)}</span>`:''}
+      <div class="ecard-row1">
+        <span class="tag city">📍 ${r.city}</span>
+        <span class="tag">${catIco(r.cat)} ${r.cat}</span>
+        ${r.cuisine?`<span class="tag cuisine">${r.cuisine}</span>`:''}
       </div>
-      ${e.dish&&e.dish!=='–'?`<div class="card-dish">🍴 ${e.dish}</div>`:''}
-      <div class="card-bottom">
-        <span class="rec-badge ${recClass(e.rec)}">${e.rec==='Ja'?'👍 Empfohlen':e.rec==='Nein'?'👎 Nicht empfohlen':'🤷 Geht so'}</span>
-        <div class="card-right">
-          ${e.price?`<span class="price-tag">${e.price}</span>`:''}
-          <button class="fav-btn" onclick="toggleFav(event,${e.id})">${e.fav?'❤️':'🤍'}</button>
+      <div class="ecard-row2">
+        ${lv?.date?`<span class="tag">📅 ${fmtD(lv.date)}</span>`:''}
+        ${r.visits.length>1?`<span class="tag visits">🔄 ${r.visits.length}×</span>`:''}
+        ${tr?`<span class="trend-b ${tr.c}">${tr.i}</span>`:''}
+        ${r.visits.length>1?`<div class="trendline-wrap">${trendLineSVG(r)}</div>`:''}
+      </div>
+      <div class="ecard-bottom">
+        <span class="rec-b ${recCls(lv?.rec||'–')}">${lv?.rec==='Ja'?'👍 Empfohlen':lv?.rec==='Nein'?'👎 Nicht empfohlen':lv?.rec==='Geht so'?'🤷 Geht so':'–'}</span>
+        <div class="ecard-right">
+          ${r.price?`<span class="price-t">${r.price}</span>`:''}
+          <button class="fav-btn" onclick="togFav(event,${r.id})">${r.fav?'❤️':'🤍'}</button>
         </div>
       </div>
-      ${subHtml}
+      ${lv&&(lv.sE!=null||lv.sA!=null||lv.sS!=null)?`<div class="sub-scores-mini">
+        ${lv.sE!=null?`<div class="ssm"><div class="ssm-v">${lv.sE}</div><div class="ssm-l">Essen</div></div>`:''}
+        ${lv.sA!=null?`<div class="ssm"><div class="ssm-v">${lv.sA}</div><div class="ssm-l">Ambien.</div></div>`:''}
+        ${lv.sS!=null?`<div class="ssm"><div class="ssm-v">${lv.sS}</div><div class="ssm-l">Service</div></div>`:''}
+      </div>`:''}
     </div>
   </div>`;
 }
 
-function renderGridCard(e,i){
-  const sc=getScore(e);
-  const scCls=scoreClass(sc);
-  const catIco=catIcon(e.cat);
-  return`<div class="grid-card" onclick="openDetail(${e.id})" style="animation-delay:${i*.05}s">
-    ${e.img?`<img class="grid-img" src="${e.img}" style="font-size:0">`:`<div class="grid-img">${catIco}</div>`}
-    <div class="grid-body">
-      <div class="grid-name">${e.name}</div>
-      <div class="grid-row">
-        <span class="grid-city">📍 ${e.city}</span>
-        <span class="grid-score ${scCls}">${sc!=null?sc:'–'}</span>
-      </div>
-      <div class="grid-row">
-        <span class="rec-badge grid-rec ${recClass(e.rec)}">${e.rec==='Ja'?'👍':e.rec==='Nein'?'👎':'🤷'} ${e.rec}</span>
-        <span class="grid-fav">${e.fav?'❤️':'🤍'}</span>
+function gridCard(r,i){
+  const lsc=rLSc(r);const lv=rLV(r);
+  return`<div class="gcard" onclick="openDetail(${r.id})" style="animation-delay:${i*.05}s">
+    ${r.img?`<img class="gcard-img" src="${r.img}" style="font-size:0">`:`<div class="gcard-img">${catIco(r.cat)}</div>`}
+    <div class="gcard-body">
+      <div class="gcard-name">${r.name}</div>
+      <div class="gcard-row"><span class="gcard-city">📍 ${r.city}</span><span class="gcard-score ${scCls(lsc)}">${lsc??'–'}</span></div>
+      <div class="gcard-row">
+        <span class="rec-b ${recCls(lv?.rec||'–')}" style="font-size:11px">${lv?.rec==='Ja'?'👍':lv?.rec==='Nein'?'👎':'🤷'} ${lv?.rec||'–'}</span>
+        ${r.visits.length>1?`<span style="font-size:11px;color:var(--green)">🔄${r.visits.length}</span>`:''}
       </div>
     </div>
   </div>`;
 }
 
-/* ── STAT CHIPS ── */
-function renderStatChips(filtered){
-  const withSc=filtered.filter(e=>getScore(e)!=null);
-  const avg=withSc.length?(withSc.reduce((s,e)=>s+getScore(e),0)/withSc.length).toFixed(1):'–';
-  const recs=filtered.filter(e=>e.rec==='Ja').length;
-  const favs=DB.filter(e=>e.fav).length;
-  const cities=[...new Set(DB.map(e=>e.city))];
-
-  document.getElementById('statsRow').innerHTML=`
-    <div class="stat-chip ${filterScoreMin>1?'on':''}" onclick="document.getElementById('fp-score-min').value=1;filterScoreMin=1;document.getElementById('fp-score-val').textContent=1;render()" title="Alle Bewertungen">
-      <div class="stat-v">${filtered.length}</div><div class="stat-l">Einträge</div></div>
-    <div class="stat-chip" onclick="statsChipAvg()">
-      <div class="stat-v">${avg}</div><div class="stat-l">Ø Note</div></div>
-    <div class="stat-chip ${[...filterRecs].includes('Ja')?'on':''}" onclick="statsChipRec()" title="Empfehlungen filtern">
-      <div class="stat-v">${recs}</div><div class="stat-l">Empfohlen</div></div>
-    <div class="stat-chip ${activeTab===1?'on':''}" onclick="switchTab(1)" title="Favoriten">
-      <div class="stat-v">${favs}</div><div class="stat-l">Favoriten</div></div>
-    <div class="stat-chip" onclick="statsChipCities(${cities.length})" title="Städte">
-      <div class="stat-v">${cities.length}</div><div class="stat-l">Städte</div></div>
+/* ── CHIPS ── */
+function renderChips(filtered){
+  const wSc=filtered.filter(r=>rLSc(r)!=null);
+  const avg=wSc.length?(wSc.reduce((s,r)=>s+rLSc(r),0)/wSc.length).toFixed(1):'–';
+  const totV=DB.reduce((s,r)=>s+r.visits.length,0);
+  document.getElementById('chips').innerHTML=`
+    <div class="chip" onclick="resetFilter();render()"><div class="chip-v">${filtered.length}</div><div class="chip-l">Orte</div></div>
+    <div class="chip"><div class="chip-v">${totV}</div><div class="chip-l">Besuche</div></div>
+    <div class="chip" onclick="chipAvg()"><div class="chip-v">${avg}</div><div class="chip-l">Ø Note</div></div>
+    <div class="chip ${activeTab===1?'on':''}" onclick="switchTab(1)"><div class="chip-v">${DB.filter(r=>r.fav).length}</div><div class="chip-l">Favoriten</div></div>
+    <div class="chip" onclick="chipRec()"><div class="chip-v">${filtered.filter(r=>rLRec(r)==='Ja').length}</div><div class="chip-l">Empfohlen</div></div>
   `;
 }
+function chipAvg(){fScMin=7;document.getElementById('fp-sc').value=7;document.getElementById('fp-scv').textContent='7';render();toast('Einträge ≥ 7.0')}
+function chipRec(){if(fRec.has('Ja'))fRec.delete('Ja');else{fRec.clear();fRec.add('Ja');}render();}
 
-function statsChipAvg(){
-  filterScoreMin=7;
-  document.getElementById('fp-score-min').value=7;
-  document.getElementById('fp-score-val').textContent='7';
-  render();
-  toast('Zeige Einträge ≥ 7.0');
-}
-function statsChipRec(){
-  if(filterRecs.has('Ja')){filterRecs.clear();}else{filterRecs.clear();filterRecs.add('Ja');}
-  render();
-}
-function statsChipCities(n){
-  openFilter();
-}
-
-/* ── CAT FILTER BAR ── */
 function renderCatBar(){
-  const el=document.getElementById('catFilter');
-  const cats=['Alle',...CATS];
-  el.innerHTML=cats.map(c=>`<button class="pill ${filterCats.size===0&&c==='Alle'?'on':filterCats.has(c)?'on':''}" onclick="toggleCatBar('${c}')">${c==='Alle'?'Alle':catIcon(c)+' '+c}</button>`).join('');
+  document.getElementById('catFbar').innerHTML=['Alle',...CATS].map(c=>`<button class="pill ${fCats.size===0&&c==='Alle'?'on':fCats.has(c)?'on':''}" onclick="togCat('${c}')">${c==='Alle'?'Alle':catIco(c)+' '+c}</button>`).join('');
+}
+function togCat(c){if(c==='Alle')fCats.clear();else{if(fCats.has(c))fCats.delete(c);else fCats.add(c);}render();}
+
+/* ── CHART SVG (full) ── */
+function buildChart(visits){
+  if(visits.length<2)return'';
+  const W=320,H=100,P={t:8,r:8,b:22,l:26};
+  const cW=W-P.l-P.r,cH=H-P.t-P.b;
+  const n=visits.length;
+  const xP=i=>P.l+i*(cW/(n-1));
+  const yP=v=>P.t+cH-((v-1)/9)*cH;
+  const series=[
+    {fn:v=>vSc(v),col:'var(--acc)',lbl:'Gesamt'},
+    {fn:v=>v.sE,col:'var(--green)',lbl:'Essen'},
+    {fn:v=>v.sA,col:'var(--yellow)',lbl:'Ambiente'},
+    {fn:v=>v.sS,col:'var(--red)',lbl:'Service'},
+  ];
+  let svg=`<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" class="chart-svg" style="height:${H}px">`;
+  [2,4,6,8,10].forEach(v=>{
+    const y=yP(v);
+    svg+=`<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" class="c-grid"/>`;
+    svg+=`<text x="${P.l-3}" y="${y+3}" class="c-ylbl">${v}</text>`;
+  });
+  visits.forEach((v,i)=>{
+    if(i%Math.max(1,Math.floor(n/4))===0||i===n-1){
+      const lbl=v.date?v.date.substring(5):'';
+      svg+=`<text x="${xP(i)}" y="${H-2}" class="c-xlbl">${lbl}</text>`;
+    }
+  });
+  series.forEach(s=>{
+    const pts=visits.map((v,i)=>({x:xP(i),y:yP(s.fn(v)??0),val:s.fn(v)})).filter(p=>p.val!=null);
+    if(pts.length<2)return;
+    let d=pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('');
+    svg+=`<path d="${d}" class="c-line" style="stroke:${s.col}"/>`;
+    pts.forEach(p=>{svg+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" class="c-dot" fill="${s.col}"><title>${p.val}</title></circle>`;});
+  });
+  svg+=`</svg><div class="chart-legend">`;
+  series.forEach(s=>svg+=`<div class="cleg"><div class="cleg-dot" style="background:${s.col}"></div>${s.lbl}</div>`);
+  svg+=`</div></div>`;
+  return svg;
 }
 
-function toggleCatBar(c){
-  if(c==='Alle'){filterCats.clear();}
-  else{
-    if(filterCats.has(c)) filterCats.delete(c);
-    else filterCats.add(c);
-  }
-  render();
-}
-
-/* ── DETAIL ── */
-function openDetail(id){
-  const e=DB.find(x=>x.id===id);if(!e)return;
-  const sc=getScore(e);
-  const scCls=scoreClass(sc);
-  let html=``;
-  if(e.img) html+=`<img class="detail-hero" src="${e.img}">`;
-  else html+=`<div class="detail-hero-placeholder">${catIcon(e.cat)}</div>`;
-  html+=`<div class="sheet-handle"></div>
-  <div class="detail-score-row">
-    <div class="detail-big-score ${scCls}">${sc??'–'}${sc!=null?'<span class="dbl">/10</span>':''}</div>
+/* ── DETAIL MODAL ── */
+function openDetail(rid){
+  const r=DB.find(x=>x.id===rid);if(!r)return;
+  const lv=rLV(r);const lsc=rLSc(r);const tr=trend(r);
+  const sortedV=[...r.visits].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const chronV=[...r.visits].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let h='';
+  if(r.img)h+=`<img class="dm-hero" src="${r.img}">`;
+  else h+=`<div class="dm-hero-ph">${catIco(r.cat)}</div>`;
+  h+=`<button class="mox" onclick="closeOv('detailOv')">✕</button>
+  <div class="dm-body">
+  <div class="dm-score-row">
+    <div class="dm-big ${scCls(lsc)}">${lsc??'–'}${lsc!=null?'<span class="dbl">/10</span>':''}</div>
     <div>
-      <div class="detail-title">${e.name}</div>
-      <div class="detail-city-row">📍 ${e.city}${e.date?' · '+fmtDate(e.date):''}</div>
+      <div class="dm-title">${r.name}</div>
+      <div class="dm-sub">📍 ${r.city}${r.price?' · '+r.price:''}${r.cuisine?' · '+r.cuisine:''}<br>${r.visits.length} Besuch${r.visits.length!==1?'e':''}</div>
     </div>
   </div>
-  <div class="detail-tags">
-    <span class="detail-tag">${catIcon(e.cat)} ${e.cat}</span>
-    ${e.price?`<span class="detail-tag">${e.price}</span>`:''}
-    <span class="rec-badge ${recClass(e.rec)}">${e.rec==='Ja'?'👍 Empfohlen':e.rec==='Nein'?'👎 Nicht empfohlen':'🤷 Geht so'}</span>
+  <div class="dm-tags">
+    <span class="dm-tag">${catIco(r.cat)} ${r.cat}</span>
+    ${r.price?`<span class="dm-tag">${r.price}</span>`:''}
+    ${tr?`<span class="dm-tag ${tr.c==='tu'?'sh':tr.c==='td'?'sl':'sn'}" style="background:${tr.c==='tu'?'var(--green-bg)':tr.c==='td'?'var(--red-bg)':'var(--bg3)'};color:${tr.c==='tu'?'var(--green)':tr.c==='td'?'var(--red)':'var(--text3)'}">Trend ${tr.i}</span>`:''}
+    ${r.tags.map(t=>`<span class="dm-tag" style="background:var(--bg3);color:var(--text2)">🏷 ${t}</span>`).join('')}
   </div>`;
-
-  if(e.sEssen!=null||e.sAmb!=null||e.sSvc!=null){
-    html+=`<div class="detail-section">
-      <div class="detail-section-title">Einzelbewertungen</div>
-      <div class="sub-score-row">
-        ${e.sEssen!=null?`<div class="sub-score-item"><div class="sub-score-val">${e.sEssen}</div><div class="sub-score-lbl">🍽 Essen</div></div>`:''}
-        ${e.sAmb!=null?`<div class="sub-score-item"><div class="sub-score-val">${e.sAmb}</div><div class="sub-score-lbl">✨ Ambiente</div></div>`:''}
-        ${e.sSvc!=null?`<div class="sub-score-item"><div class="sub-score-val">${e.sSvc}</div><div class="sub-score-lbl">🤝 Service</div></div>`:''}
-      </div>
+  // latest visit scores
+  if(lv&&(lv.sE!=null||lv.sA!=null||lv.sS!=null)){
+    h+=`<div class="dm-sec"><div class="dm-sec-t">Letzter Besuch${lv.date?' · '+fmtD(lv.date):''}</div>
+    <div class="ssc-row">
+      ${lv.sE!=null?`<div class="ssc"><div class="ssc-v">${lv.sE}</div><div class="ssc-l">🍽 Essen</div></div>`:''}
+      ${lv.sA!=null?`<div class="ssc"><div class="ssc-v">${lv.sA}</div><div class="ssc-l">✨ Ambiente</div></div>`:''}
+      ${lv.sS!=null?`<div class="ssc"><div class="ssc-v">${lv.sS}</div><div class="ssc-l">🤝 Service</div></div>`:''}
+    </div>
+    ${lv.notes?`<div style="font-size:13px;color:var(--text);margin-top:7px;line-height:1.5">${lv.notes}</div>`:''}
     </div>`;
   }
-  if(e.dish&&e.dish!=='–') html+=`<div class="detail-section"><div class="detail-section-title">Gericht</div><div class="detail-section-text">🍴 ${e.dish}</div></div>`;
-  if(e.notes) html+=`<div class="detail-section"><div class="detail-section-title">Notizen</div><div class="detail-section-text">${e.notes}</div></div>`;
+  // Chart
+  if(r.visits.length>1){
+    h+=`<div class="dm-sec"><div class="dm-sec-t">📈 Bewertungsentwicklung</div>${buildChart(chronV)}</div>`;
+  }
+  // All visits
+  h+=`<div class="dm-sec"><div class="dm-sec-t">Alle Besuche (${r.visits.length})</div>
+  <div class="vlist">${sortedV.map((v,i)=>{
+    const s=vSc(v);
+    return`<div class="vitem ${i===0?'latest':''}" onclick="openVisitDetail(${rid},${v.id})">
+      <div class="vdot ${scCls(s)}">${s??'·'}</div>
+      <div class="vinfo">
+        <div class="vdate">${fmtD(v.date)||'–'}</div>
+        <div class="vsub">${v.dish&&v.dish!=='–'?'🍴 '+v.dish:v.notes?v.notes.substring(0,30)+'…':'Kein Eintrag'}</div>
+      </div>
+      <span class="vsc">${s??'–'}</span>
+      <span style="color:var(--text3);font-size:15px">›</span>
+    </div>`;}).join('')}
+  </div></div>`;
+  h+=`<div class="dm-actions">
+    ${r.maps?`<a class="dm-btn acc" href="${r.maps}" target="_blank">🗺 Maps</a>`:''}
+    ${r.web?`<a class="dm-btn" href="${r.web}" target="_blank">🌐 Web</a>`:''}
+    <button class="dm-btn warn" onclick="openVisitForm(${rid},null)">➕ Besuch</button>
+    <button class="dm-btn" onclick="togFavDetail(${rid})">${r.fav?'❤️':'🤍'}</button>
+    <button class="dm-btn" onclick="closeOv('detailOv');openRestForm(${rid})">✏️</button>
+    <button class="dm-btn danger" onclick="delRest(${rid})">🗑</button>
+  </div></div>`;
+  document.getElementById('detailBox').innerHTML=h;
+  document.getElementById('detailOv').classList.add('open');
+}
+function togFavDetail(rid){const r=DB.find(x=>x.id===rid);if(!r)return;r.fav=!r.fav;saveLS();openDetail(rid);render();}
+function delRest(rid){if(!confirm('Restaurant und alle Besuche löschen?'))return;DB=DB.filter(x=>x.id!==rid);closeOv('detailOv');render();saveLS();toast('Gelöscht')}
 
-  html+=`<div class="detail-action-row">
-    ${e.maps?`<a class="detail-btn accent" href="${e.maps}" target="_blank">🗺 Maps</a>`:''}
-    <button class="detail-btn" onclick="toggleFavDetail(${e.id})">${e.fav?'❤️ Entfernen':'🤍 Favorit'}</button>
-    <button class="detail-btn" onclick="closeOverlay('detailOverlay');openForm(${e.id})">✏️ Bearbeiten</button>
-    <button class="detail-btn danger" onclick="deleteEntry(${e.id})">🗑</button>
+/* ── VISIT DETAIL MODAL (z=400, sits above detail) ── */
+function openVisitDetail(rid,vid){
+  const r=DB.find(x=>x.id===rid);if(!r)return;
+  const v=r.visits.find(x=>x.id===vid);if(!v)return;
+  const s=vSc(v);
+  let h=`<button class="mox" onclick="closeOv('visitDetailOv')">✕</button>
+  <div class="dm-body">
+  <div class="vd-score-row">
+    <div class="vd-big ${scCls(s)}">${s??'–'}${s!=null?'<span class="dbl">/10</span>':''}</div>
+    <div>
+      <div class="vd-title">${r.name}</div>
+      <div class="vd-sub">📅 ${fmtD(v.date)||'Kein Datum'}</div>
+    </div>
+  </div>
+  <span class="rec-b ${recCls(v.rec)}" style="display:inline-block;margin-bottom:12px">${v.rec==='Ja'?'👍 Empfohlen':v.rec==='Nein'?'👎 Nicht empfohlen':'🤷 Geht so'}</span>`;
+  if(v.sE!=null||v.sA!=null||v.sS!=null){
+    h+=`<div class="dm-sec"><div class="dm-sec-t">Bewertungen</div>
+    <div class="ssc-row">
+      ${v.sE!=null?`<div class="ssc"><div class="ssc-v">${v.sE}</div><div class="ssc-l">🍽 Essen</div></div>`:''}
+      ${v.sA!=null?`<div class="ssc"><div class="ssc-v">${v.sA}</div><div class="ssc-l">✨ Ambiente</div></div>`:''}
+      ${v.sS!=null?`<div class="ssc"><div class="ssc-v">${v.sS}</div><div class="ssc-l">🤝 Service</div></div>`:''}
+    </div></div>`;
+  }
+  if(v.dish&&v.dish!=='–')h+=`<div class="dm-sec"><div class="dm-sec-t">Gericht</div><div class="dm-sec-txt">🍴 ${v.dish}</div></div>`;
+  if(v.notes)h+=`<div class="dm-sec"><div class="dm-sec-t">Notizen</div><div class="dm-sec-txt">${v.notes}</div></div>`;
+  if(v.dishes&&v.dishes.length){
+    h+=`<div class="dm-sec"><div class="dm-sec-t">Gerichtsbewertungen</div><div class="dish-list">`;
+    v.dishes.forEach(d=>{
+      h+=`<div class="dish-item">
+        <div class="dish-name">🍴 ${d.name}</div>
+        <div class="dish-score ${scCls(d.score)}">${d.score??'–'}</div>
+        <span class="dish-rec rec-b ${recCls(d.rec)}">${d.rec}</span>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  }
+  // Chart if multiple visits
+  if(r.visits.length>1){
+    const chronV=[...r.visits].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    h+=`<div class="dm-sec"><div class="dm-sec-t">Verlauf</div>${buildChart(chronV)}</div>`;
+  }
+  h+=`<div class="vd-actions">
+    <button class="vd-btn" onclick="closeOv('visitDetailOv')">← Zurück</button>
+    <button class="vd-btn edit" onclick="closeOv('visitDetailOv');openVisitForm(${rid},${vid})">✏️ Bearbeiten</button>
+    <button class="vd-btn del" onclick="delVisit(${rid},${vid})">🗑 Löschen</button>
+  </div>
   </div>`;
-
-  document.getElementById('detailSheet').innerHTML=html;
-  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('visitDetailBox').innerHTML=h;
+  document.getElementById('visitDetailOv').classList.add('open');
+}
+function delVisit(rid,vid){
+  if(!confirm('Besuch löschen?'))return;
+  const r=DB.find(x=>x.id===rid);if(!r)return;
+  r.visits=r.visits.filter(x=>x.id!==vid);
+  closeOv('visitDetailOv');
+  saveLS();render();toast('Besuch gelöscht');
+  if(r.visits.length>0){openDetail(rid);}
+  else{closeOv('detailOv');}
 }
 
-function toggleFavDetail(id){
-  const e=DB.find(x=>x.id===id);if(!e)return;
-  e.fav=!e.fav;openDetail(id);render();
-}
-
-function deleteEntry(id){
-  if(!confirm('Eintrag wirklich löschen?'))return;
-  DB=DB.filter(x=>x.id!==id);
-  closeOverlay('detailOverlay');render();toast('Eintrag gelöscht');
-}
-
-/* ── FORM ── */
-function openForm(id){
+/* ── VISIT FORM (z=500) ── */
+function openVisitForm(rid,vid){
+  const r=DB.find(x=>x.id===rid);if(!r)return;
   const today=new Date().toISOString().split('T')[0];
-  formImg=null;
-  document.getElementById('imgPreview').style.display='none';
-  document.getElementById('imgRemove').style.display='none';
-  document.getElementById('imgPreview').src='';
-
-  updateCityDatalist();
-
-  if(id===null){
-    // new
-    document.getElementById('formTitle').textContent='✦ Neuer Eintrag';
-    document.getElementById('editId').value='';
-    document.getElementById('f-city').value='';
-    document.getElementById('f-date').value=today;
-    document.getElementById('f-name').value='';
-    document.getElementById('f-cat').value='Restaurant';
-    document.getElementById('f-price').value='€€';
-    document.getElementById('f-dish').value='';
-    document.getElementById('f-notes').value='';
-    document.getElementById('f-maps').value='';
-    document.getElementById('f-s-essen').value=5;
-    document.getElementById('f-s-amb').value=5;
-    document.getElementById('f-s-svc').value=5;
-    selectedRec='Ja';
+  formDishes=[];
+  document.getElementById('vf-rid').value=rid;
+  document.getElementById('vf-vid').value=vid??'';
+  document.getElementById('dishList').innerHTML='';
+  if(!vid){
+    document.getElementById('vfTitle').textContent=`➕ Neuer Besuch · ${r.name}`;
+    document.getElementById('vf-date').value=today;
+    document.getElementById('vf-dish').value='';
+    document.getElementById('vf-notes').value='';
+    document.getElementById('vf-se').value=5;document.getElementById('vf-sa').value=5;document.getElementById('vf-ss').value=5;
+    selRec='Ja';
   } else {
-    const e=DB.find(x=>x.id===id);if(!e)return;
-    document.getElementById('formTitle').textContent='✏️ Bearbeiten';
-    document.getElementById('editId').value=id;
-    document.getElementById('f-city').value=e.city;
-    document.getElementById('f-date').value=e.date||today;
-    document.getElementById('f-name').value=e.name;
-    document.getElementById('f-cat').value=e.cat;
-    document.getElementById('f-price').value=e.price||'€€';
-    document.getElementById('f-dish').value=e.dish||'';
-    document.getElementById('f-notes').value=e.notes||'';
-    document.getElementById('f-maps').value=e.maps||'';
-    document.getElementById('f-s-essen').value=e.sEssen??5;
-    document.getElementById('f-s-amb').value=e.sAmb??5;
-    document.getElementById('f-s-svc').value=e.sSvc??5;
-    selectedRec=e.rec||'Ja';
-    if(e.img){formImg=e.img;document.getElementById('imgPreview').src=e.img;document.getElementById('imgPreview').style.display='block';document.getElementById('imgRemove').style.display='flex';}
+    const v=r.visits.find(x=>x.id===vid);if(!v)return;
+    document.getElementById('vfTitle').textContent=`✏️ Besuch bearbeiten · ${r.name}`;
+    document.getElementById('vf-date').value=v.date||today;
+    document.getElementById('vf-dish').value=v.dish||'';
+    document.getElementById('vf-notes').value=v.notes||'';
+    document.getElementById('vf-se').value=v.sE??5;document.getElementById('vf-sa').value=v.sA??5;document.getElementById('vf-ss').value=v.sS??5;
+    selRec=v.rec||'Ja';
+    formDishes=[...(v.dishes||[])];
+    renderDishList();
   }
-  updateScores();
-  setRec(document.querySelector(`.rec-opt[data-r="${selectedRec}"]`),selectedRec);
-  document.getElementById('formOverlay').classList.add('open');
+  updSc();syncRec();
+  document.getElementById('vf-dnm').value='';
+  document.getElementById('vf-dsc').value='';
+  document.getElementById('vf-drec').value='Ja';
+  document.getElementById('visitFormOv').classList.add('open');
 }
 
-function updateCityDatalist(){
-  const dl=document.getElementById('cityList');
-  dl.innerHTML=allCities().map(c=>`<option value="${c}">`).join('');
+function saveVisit(){
+  const rid=parseInt(document.getElementById('vf-rid').value);
+  const vidRaw=document.getElementById('vf-vid').value;
+  const r=DB.find(x=>x.id===rid);if(!r)return;
+  const vObj={id:vidRaw?parseInt(vidRaw):nVid++,date:document.getElementById('vf-date').value,dish:document.getElementById('vf-dish').value,sE:parseFloat(document.getElementById('vf-se').value),sA:parseFloat(document.getElementById('vf-sa').value),sS:parseFloat(document.getElementById('vf-ss').value),rec:selRec,notes:document.getElementById('vf-notes').value,dishes:[...formDishes]};
+  if(!vidRaw){r.visits.push(vObj);toast(`✅ Besuch #${r.visits.length} gespeichert!`);}
+  else{const vi=r.visits.findIndex(x=>x.id===parseInt(vidRaw));if(vi>=0)r.visits[vi]=vObj;toast('✅ Besuch aktualisiert!');}
+  closeOv('visitFormOv');render();saveLS();
+  openDetail(rid);
 }
 
-function updateScores(){
-  const a=parseFloat(document.getElementById('f-s-essen').value);
-  const b=parseFloat(document.getElementById('f-s-amb').value);
-  const c=parseFloat(document.getElementById('f-s-svc').value);
-  document.getElementById('sv-essen').textContent=a;
-  document.getElementById('sv-amb').textContent=b;
-  document.getElementById('sv-svc').textContent=c;
-  const avg=((a+b+c)/3).toFixed(1);
-  document.getElementById('totalScoreNum').textContent=avg;
+/* Dish sub-rating */
+function addDish(){
+  const nm=document.getElementById('vf-dnm').value.trim();
+  const sc=parseFloat(document.getElementById('vf-dsc').value);
+  const rec=document.getElementById('vf-drec').value;
+  if(!nm)return;
+  formDishes.push({name:nm,score:isNaN(sc)?null:sc,rec});
+  document.getElementById('vf-dnm').value='';document.getElementById('vf-dsc').value='';
+  renderDishList();
+}
+function removeDish(i){formDishes.splice(i,1);renderDishList();}
+function renderDishList(){
+  document.getElementById('dishList').innerHTML=formDishes.map((d,i)=>`
+    <div class="dish-item">
+      <div class="dish-name">🍴 ${d.name}</div>
+      <div class="dish-score ${scCls(d.score)}">${d.score??'–'}</div>
+      <span class="dish-rec rec-b ${recCls(d.rec)}">${d.rec}</span>
+      <button onclick="removeDish(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0">✕</button>
+    </div>`).join('');
 }
 
-function setRec(btn,val){
-  selectedRec=val;
-  document.querySelectorAll('.rec-opt').forEach(b=>{
-    b.className='rec-opt';
-    if(b.dataset.r===val) b.className+=' sel-'+(val==='Ja'?'y':val==='Geht so'?'m':'n');
-  });
-}
-
-function handleImg(inp){
-  const f=inp.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    formImg=ev.target.result;
-    document.getElementById('imgPreview').src=formImg;
-    document.getElementById('imgPreview').style.display='block';
-    document.getElementById('imgRemove').style.display='flex';
-  };
-  r.readAsDataURL(f);
-}
-
-function removeImg(ev){
-  ev.stopPropagation();
-  formImg=null;
-  document.getElementById('imgPreview').style.display='none';
-  document.getElementById('imgRemove').style.display='none';
-  document.getElementById('imgInp').value='';
-}
-
-function saveEntry(){
-  const name=document.getElementById('f-name').value.trim();
-  const city=document.getElementById('f-city').value.trim();
-  if(!name||!city){toast('❗ Name und Stadt sind pflicht');return;}
-
-  const obj={
-    id:0,
-    date:document.getElementById('f-date').value,
-    city,
-    cat:document.getElementById('f-cat').value,
-    name,
-    dish:document.getElementById('f-dish').value,
-    sEssen:parseFloat(document.getElementById('f-s-essen').value),
-    sAmb:parseFloat(document.getElementById('f-s-amb').value),
-    sSvc:parseFloat(document.getElementById('f-s-svc').value),
-    rec:selectedRec,
-    price:document.getElementById('f-price').value,
-    notes:document.getElementById('f-notes').value,
-    maps:document.getElementById('f-maps').value,
-    fav:false,
-    img:formImg
-  };
-
-  const eid=document.getElementById('editId').value;
-  if(eid){
-    const idx=DB.findIndex(x=>x.id===parseInt(eid));
-    if(idx>=0){obj.id=DB[idx].id;obj.fav=DB[idx].fav;DB[idx]=obj;}
-    toast('✅ Eintrag aktualisiert!');
+/* ── RESTAURANT FORM ── */
+function openRestForm(rid){
+  const today=new Date().toISOString().split('T')[0];
+  formImg=null;formTags=[];dupeRid=null;
+  document.getElementById('imgPrev').style.display='none';
+  document.getElementById('imgRm').style.display='none';
+  document.getElementById('imgPrev').src='';
+  document.getElementById('tagsW').querySelectorAll('.tchip').forEach(e=>e.remove());
+  document.getElementById('tagsInp').value='';
+  document.getElementById('dupeWarn').style.display='none';
+  updateCityDL();populateCuisineSel();
+  if(!rid){
+    document.getElementById('rfTitle').textContent='✦ Neuer Eintrag';
+    document.getElementById('rf-id').value='';
+    document.getElementById('rf-city').value='';document.getElementById('rf-date').value=today;
+    document.getElementById('rf-name').value='';document.getElementById('rf-cat').value='Restaurant';
+    document.getElementById('rf-price').value='€€';document.getElementById('rf-cuisine').value='';
+    document.getElementById('rf-web').value='';document.getElementById('rf-maps').value='';
   } else {
-    obj.id=nextId++;
-    DB.unshift(obj);
-    toast('✅ Eintrag gespeichert!');
+    const r=DB.find(x=>x.id===rid);if(!r)return;
+    document.getElementById('rfTitle').textContent='✏️ Restaurant bearbeiten';
+    document.getElementById('rf-id').value=rid;
+    document.getElementById('rf-city').value=r.city;document.getElementById('rf-date').value=today;
+    document.getElementById('rf-name').value=r.name;document.getElementById('rf-cat').value=r.cat;
+    document.getElementById('rf-price').value=r.price||'€€';document.getElementById('rf-cuisine').value=r.cuisine||'';
+    document.getElementById('rf-web').value=r.web||'';document.getElementById('rf-maps').value=r.maps||'';
+    r.tags.forEach(t=>addTagChip(t));
+    if(r.img){formImg=r.img;document.getElementById('imgPrev').src=r.img;document.getElementById('imgPrev').style.display='block';document.getElementById('imgRm').style.display='flex';}
   }
-
-  closeOverlay('formOverlay');
-  render();
-  updateFilterPanelCities();
+  document.getElementById('restFormOv').classList.add('open');
 }
+function saveRest(){
+  const name=document.getElementById('rf-name').value.trim();
+  const city=document.getElementById('rf-city').value.trim();
+  if(!name||!city){toast('❗ Name und Stadt pflicht');return;}
+  const rid=document.getElementById('rf-id').value;
+  if(!rid){
+    const nr={id:nRid++,city,cat:document.getElementById('rf-cat').value,name,cuisine:document.getElementById('rf-cuisine').value,price:document.getElementById('rf-price').value,maps:document.getElementById('rf-maps').value,web:document.getElementById('rf-web').value,img:formImg,tags:[...formTags],fav:false,visits:[]};
+    DB.unshift(nr);closeOv('restFormOv');render();saveLS();
+    toast('Restaurant gespeichert — jetzt ersten Besuch eintragen!');
+    setTimeout(()=>openVisitForm(nr.id,null),350);
+  } else {
+    const r=DB.find(x=>x.id===parseInt(rid));if(!r)return;
+    r.city=city;r.name=name;r.cat=document.getElementById('rf-cat').value;
+    r.cuisine=document.getElementById('rf-cuisine').value;r.price=document.getElementById('rf-price').value;
+    r.maps=document.getElementById('rf-maps').value;r.web=document.getElementById('rf-web').value;
+    r.img=formImg;r.tags=[...formTags];
+    closeOv('restFormOv');render();saveLS();toast('✅ Restaurant aktualisiert!');
+  }
+  updateCityDL();updateFpCities();
+}
+function checkDupe(){
+  const name=document.getElementById('rf-name').value.trim().toLowerCase();
+  const city=document.getElementById('rf-city').value.trim().toLowerCase();
+  const rid=document.getElementById('rf-id').value;
+  if(!name||!city){document.getElementById('dupeWarn').style.display='none';return;}
+  const m=DB.find(r=>String(r.id)!==rid&&r.name.toLowerCase().includes(name)&&r.city.toLowerCase()===city);
+  if(m){dupeRid=m.id;const dw=document.getElementById('dupeWarn');dw.textContent=`⚠️ "${m.name}" in ${m.city} existiert (${m.visits.length} Besuch${m.visits.length!==1?'e':''}). Hier tippen für neuen Besuch.`;dw.style.display='block';}
+  else{dupeRid=null;document.getElementById('dupeWarn').style.display='none';}
+}
+function useDupe(){if(!dupeRid)return;closeOv('restFormOv');setTimeout(()=>openVisitForm(dupeRid,null),200);}
+function updateCityDL(){document.getElementById('cityList').innerHTML=allCities().map(c=>`<option value="${c}">`).join('');}
+
+/* ── SCORES / REC ── */
+function updSc(){
+  const a=parseFloat(document.getElementById('vf-se').value),b=parseFloat(document.getElementById('vf-sa').value),c=parseFloat(document.getElementById('vf-ss').value);
+  document.getElementById('sv-e').textContent=a;document.getElementById('sv-a').textContent=b;document.getElementById('sv-s').textContent=c;
+  document.getElementById('ts-n').textContent=((a+b+c)/3).toFixed(1);
+}
+function setRec(btn){selRec=btn.dataset.r;syncRec();}
+function syncRec(){document.querySelectorAll('.ropt').forEach(b=>{b.className='ropt';if(b.dataset.r===selRec)b.className+=' sl'+(selRec==='Ja'?'y':selRec==='Geht so'?'m':'n');});}
+
+/* ── TAGS ── */
+function addTagChip(t){
+  if(!t||formTags.includes(t))return;
+  formTags.push(t);
+  const c=document.createElement('span');c.className='tchip';
+  c.innerHTML=`${t}<button onclick="rmTag('${t}',this.parentElement)">✕</button>`;
+  document.getElementById('tagsW').insertBefore(c,document.getElementById('tagsInp'));
+}
+function rmTag(t,el){formTags=formTags.filter(x=>x!==t);el.remove();}
+function tagKD(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.trim().replace(',','');if(v){addTagChip(v);e.target.value=''}}}
+
+/* ── IMG ── */
+function handleImg(inp){const f=inp.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{formImg=ev.target.result;document.getElementById('imgPrev').src=formImg;document.getElementById('imgPrev').style.display='block';document.getElementById('imgRm').style.display='flex';};rd.readAsDataURL(f);}
+function removeImg(ev){ev.stopPropagation();formImg=null;document.getElementById('imgPrev').style.display='none';document.getElementById('imgRm').style.display='none';document.getElementById('imgInp').value='';}
+
+/* ── FAV ── */
+function togFav(ev,rid){ev.stopPropagation();const r=DB.find(x=>x.id===rid);if(!r)return;r.fav=!r.fav;render();saveLS();toast(r.fav?'❤️ Favorit':'Favorit entfernt')}
+
+/* ── CUISINE ── */
+function populateCuisineSel(){
+  const sel=document.getElementById('rf-cuisine');const cur=sel.value;
+  sel.innerHTML=`<option value="">– Keine Angabe</option>`+CUISINES.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+function openCuisineEditor(){renderCedList();document.getElementById('cuisineOv').classList.add('open');}
+function renderCedList(){document.getElementById('cedList').innerHTML=CUISINES.map((c,i)=>`<div class="ced-item"><span class="ced-nm">${c}</span><button class="ced-del" onclick="delCuisine(${i})">✕</button></div>`).join('');}
+function delCuisine(i){if(!confirm(`"${CUISINES[i]}" löschen?`))return;CUISINES.splice(i,1);renderCedList();saveLS();}
+function addCuisine(){const v=document.getElementById('newCuisInp').value.trim();if(!v)return;if(CUISINES.includes(v)){toast('Existiert bereits');return;}CUISINES.push(v);document.getElementById('newCuisInp').value='';renderCedList();saveLS();toast(`"${v}" hinzugefügt`);}
 
 /* ── FILTER PANEL ── */
-function openFilter(){
-  updateFilterPanelCities();
-  document.getElementById('filterOverlay').classList.add('open');
+function openFilter(){updateFpCities();document.getElementById('filterOv').classList.add('open');}
+function updateFpCities(){
+  document.getElementById('fp-cities').innerHTML=allCities().map(c=>`<button class="fp-p ${fCities.has(c)?'on':''}" onclick="togS(fCities,'${c}',this);render()">${c}</button>`).join('');
+  document.getElementById('fp-cats').innerHTML=CATS.map(c=>`<button class="fp-p ${fCats.has(c)?'on':''}" onclick="togS(fCats,'${c}',this);render()">${catIco(c)} ${c}</button>`).join('');
+  document.getElementById('fp-cuisines').innerHTML=allCuisinesUsed().map(c=>`<button class="fp-p ${fCuisines.has(c)?'on':''}" onclick="togS(fCuisines,'${c.replace(/'/g,"\\'")}',this);render()">${c}</button>`).join('');
+  document.getElementById('fp-tags').innerHTML=allTags().map(t=>`<button class="fp-p ${fTags.has(t)?'on':''}" onclick="togS(fTags,'${t}',this);render()">🏷 ${t}</button>`).join('');
 }
-
-function updateFilterPanelCities(){
-  const cities=allCities();
-  document.getElementById('fp-cities').innerHTML=cities.map(c=>
-    `<button class="fp-pill ${filterCities.has(c)?'on':''}" onclick="toggleFpCity(this,'${c}')">${c}</button>`
-  ).join('');
-  document.getElementById('fp-cats').innerHTML=CATS.map(c=>
-    `<button class="fp-pill ${filterCats.has(c)?'on':''}" onclick="toggleFpCat(this,'${c}')">${catIcon(c)} ${c}</button>`
-  ).join('');
-  document.querySelectorAll('#fp-recs .fp-pill').forEach(b=>{
-    b.classList.toggle('on',filterRecs.has(b.dataset.r));
-  });
-  document.querySelectorAll('#fp-prices .fp-pill').forEach(b=>{
-    b.classList.toggle('on',filterPrices.has(b.dataset.p));
-  });
-}
-
-function toggleFpCity(btn,c){
-  if(filterCities.has(c)){filterCities.delete(c);btn.classList.remove('on');}
-  else{filterCities.add(c);btn.classList.add('on');}
-  renderCatBar();render();
-}
-function toggleFpCat(btn,c){
-  if(filterCats.has(c)){filterCats.delete(c);btn.classList.remove('on');}
-  else{filterCats.add(c);btn.classList.add('on');}
-  renderCatBar();render();
-}
-function toggleFpRec(btn){
-  const r=btn.dataset.r;
-  if(filterRecs.has(r)){filterRecs.delete(r);btn.classList.remove('on');}
-  else{filterRecs.add(r);btn.classList.add('on');}
-  render();
-}
-function toggleFpPrice(btn){
-  const p=btn.dataset.p;
-  if(filterPrices.has(p)){filterPrices.delete(p);btn.classList.remove('on');}
-  else{filterPrices.add(p);btn.classList.add('on');}
-  render();
-}
-function resetFilter(){
-  filterCities.clear();filterCats.clear();filterRecs.clear();filterPrices.clear();
-  filterScoreMin=1;
-  document.getElementById('fp-score-min').value=1;
-  document.getElementById('fp-score-val').textContent=1;
-  document.querySelectorAll('.fp-pill').forEach(b=>b.classList.remove('on'));
-  render();
-  toast('Filter zurückgesetzt');
-}
-
-/* fp score */
-document.getElementById('fp-score-min').addEventListener('input',function(){
-  filterScoreMin=parseFloat(this.value);render();
-});
+function resetFilter(){fCities.clear();fCats.clear();fRec.clear();fPrice.clear();fCuisines.clear();fTags.clear();fScMin=1;document.getElementById('fp-sc').value=1;document.getElementById('fp-scv').textContent='1';document.querySelectorAll('.fp-p').forEach(b=>b.classList.remove('on'));render();toast('Filter zurückgesetzt');}
 
 /* ── TABS ── */
 function switchTab(t){
   activeTab=t;
-  [0,1,2,3].forEach(i=>{document.getElementById('nb'+i).classList.toggle('on',i===t)});
-  document.getElementById('mainView').style.display=t===2?'none':'block';
-  document.getElementById('statsView').style.display=t===2?'block':'none';
-  document.getElementById('statsRow').style.display=t===2?'none':'flex';
-  const filterSection=document.querySelector('.filter-bar').parentElement;
-  if(t===1){filterCats.clear();filterCities.clear();}
+  for(let i=0;i<5;i++){const b=document.getElementById('nb'+i);if(b)b.classList.toggle('on',i===t);}
+  document.getElementById('mainView').style.display=[0,1].includes(t)?'block':'none';
+  document.getElementById('statsView').style.display=t===3?'block':'none';
+  document.getElementById('timelineView').style.display=t===2?'block':'none';
+  document.getElementById('mapView').style.display=t===4?'block':'none';
+  document.getElementById('chips').style.display=[0,1].includes(t)?'flex':'none';
+  document.querySelector('.fbar').style.display=[0,1].includes(t)?'flex':'none';
+  if(t===1){fCats.clear();fCities.clear();}
   render();
+  if(t===4)setTimeout(initMap,120);
 }
 
-/* ── SORT ── */
-const SORTS=['date','score','name'];
-const SORT_ICONS=['⇅','⬆','🔤'];
-function cycleSort(){
-  sortMode=SORTS[(SORTS.indexOf(sortMode)+1)%SORTS.length];
-  document.getElementById('btnSort').textContent=SORT_ICONS[SORTS.indexOf(sortMode)];
-  toast('Sortierung: '+['Datum','Bewertung','Name'][SORTS.indexOf(sortMode)]);
-  render();
+/* ── SORT / VIEW ── */
+const SORTS=['date','score','name'],SICS=['⇅','⬆','🔤'];
+function cycleSort(){sortMode=SORTS[(SORTS.indexOf(sortMode)+1)%3];document.getElementById('btnSort').textContent=SICS[SORTS.indexOf(sortMode)];toast(['Datum','Bewertung','Name'][SORTS.indexOf(sortMode)]);render();}
+function setView(v){viewMode=v;document.getElementById('btnList').classList.toggle('on',v==='list');document.getElementById('btnGrid').classList.toggle('on',v==='grid');render();}
+
+/* ── TIMELINE ── */
+function renderTimeline(){
+  const all=[];DB.forEach(r=>r.visits.forEach(v=>all.push({r,v})));
+  all.sort((a,b)=>new Date(b.v.date)-new Date(a.v.date));
+  const tv=document.getElementById('timelineView');
+  if(!all.length){tv.innerHTML=`<div class="empty"><div class="empty-ico">📅</div><div class="empty-t">Noch keine Einträge</div></div>`;return;}
+  const grps={};all.forEach(({r,v})=>{const ym=v.date?v.date.substring(0,7):'?';if(!grps[ym])grps[ym]=[];grps[ym].push({r,v});});
+  let h='<div style="font-size:22px;font-weight:900;padding:12px 2px 10px">📅 Verlauf</div>';
+  Object.entries(grps).forEach(([ym,items])=>{
+    const label=ym!=='?'?new Date(ym+'-01').toLocaleDateString('de-DE',{month:'long',year:'numeric'}):ym;
+    h+=`<div class="tl-mo">${label}</div>`;
+    items.forEach(({r,v},i)=>{
+      const s=vSc(v);const isLast=i===items.length-1;
+      h+=`<div class="tl-i" onclick="openDetail(${r.id})">
+        <div class="tl-left"><div class="tl-dot ${scCls(s)}">${catIco(r.cat)}</div>${!isLast?'<div class="tl-line"></div>':''}</div>
+        <div class="tl-card">
+          <div class="tl-date">${fmtD(v.date)||'?'} · <span style="color:var(--acc);font-weight:800">${s??'–'}/10</span></div>
+          <div class="tl-name">${r.name}</div>
+          <div class="tl-meta">📍 ${r.city}${r.cuisine?' · '+r.cuisine:''}${v.dish&&v.dish!=='–'?' · 🍴'+v.dish:''}</div>
+        </div>
+      </div>`;
+    });
+  });
+  tv.innerHTML=h;
 }
 
-/* ── VIEW ── */
-function setView(v){
-  viewMode=v;
-  document.getElementById('btnList').classList.toggle('on',v==='list');
-  document.getElementById('btnGrid').classList.toggle('on',v==='grid');
-  render();
-}
-
-/* ── FAV TOGGLE ── */
-function toggleFav(ev,id){
-  ev.stopPropagation();
-  const e=DB.find(x=>x.id===id);if(!e)return;
-  e.fav=!e.fav;render();toast(e.fav?'❤️ Favorit gespeichert':'Favorit entfernt');
-}
-
-/* ── STATS VIEW ── */
+/* ── STATS ── */
 function renderStats(){
   const sv=document.getElementById('statsView');
-  const withSc=DB.filter(e=>getScore(e)!=null);
-  const avg=withSc.length?(withSc.reduce((s,e)=>s+getScore(e),0)/withSc.length).toFixed(1):'–';
-  const top=[...withSc].sort((a,b)=>getScore(b)-getScore(a)).slice(0,5);
-
-  const cityMap={};DB.forEach(e=>{cityMap[e.city]=(cityMap[e.city]||0)+1});
-  const cities=Object.entries(cityMap).sort((a,b)=>b[1]-a[1]);
-  const maxC=cities[0]?.[1]||1;
-
-  const catMap={};DB.forEach(e=>{catMap[e.cat]=(catMap[e.cat]||0)+1});
-  const cats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
-  const maxCt=cats[0]?.[1]||1;
-
-  const avgEssen=DB.filter(e=>e.sEssen).length?(DB.filter(e=>e.sEssen).reduce((s,e)=>s+e.sEssen,0)/DB.filter(e=>e.sEssen).length).toFixed(1):'–';
-  const avgAmb=DB.filter(e=>e.sAmb).length?(DB.filter(e=>e.sAmb).reduce((s,e)=>s+e.sAmb,0)/DB.filter(e=>e.sAmb).length).toFixed(1):'–';
-  const avgSvc=DB.filter(e=>e.sSvc).length?(DB.filter(e=>e.sSvc).reduce((s,e)=>s+e.sSvc,0)/DB.filter(e=>e.sSvc).length).toFixed(1):'–';
-
-  sv.innerHTML=`<div class="stats-view-title">📊 Statistik</div>
-  <div class="stats-card">
-    <div class="scard-title">Übersicht</div>
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-v">${DB.length}</div><div class="kpi-l">Gesamt</div></div>
-      <div class="kpi"><div class="kpi-v">${avg}</div><div class="kpi-l">Ø Note</div></div>
-      <div class="kpi"><div class="kpi-v">${DB.filter(e=>e.fav).length}</div><div class="kpi-l">Favoriten</div></div>
-      <div class="kpi"><div class="kpi-v">${DB.filter(e=>e.rec==='Ja').length}</div><div class="kpi-l">Empfohlen</div></div>
-    </div>
-  </div>
-  <div class="stats-card">
-    <div class="scard-title">Ø Einzelbewertungen</div>
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-v">${avgEssen}</div><div class="kpi-l">🍽 Essen</div></div>
-      <div class="kpi"><div class="kpi-v">${avgAmb}</div><div class="kpi-l">✨ Ambiente</div></div>
-      <div class="kpi"><div class="kpi-v">${avgSvc}</div><div class="kpi-l">🤝 Service</div></div>
-    </div>
-  </div>
-  <div class="stats-card">
-    <div class="scard-title">🏆 Top Bewertungen</div>
-    ${top.map((e,i)=>`<div class="top-item" onclick="closeOverlay('x');openDetail(${e.id})">
-      <div class="top-rank">${i+1}</div>
-      <div class="top-info"><div class="top-name">${e.name}</div><div class="top-sub">${e.city} · ${e.cat}</div></div>
-      <div class="top-sc">${getScore(e)}</div>
-    </div>`).join('')}
-  </div>
-  <div class="stats-card">
-    <div class="scard-title">📍 Nach Stadt</div>
-    ${cities.map(([c,n])=>`<div class="bar-item"><div class="bar-lbl">${c}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/maxC*100).toFixed(0)}%"></div></div><div class="bar-cnt">${n}</div></div>`).join('')}
-  </div>
-  <div class="stats-card">
-    <div class="scard-title">🗂 Nach Kategorie</div>
-    ${cats.map(([c,n])=>`<div class="bar-item"><div class="bar-lbl">${catIcon(c)} ${c}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/maxCt*100).toFixed(0)}%"></div></div><div class="bar-cnt">${n}</div></div>`).join('')}
-  </div>`;
+  const allV=DB.flatMap(r=>r.visits);
+  const withSc=DB.filter(r=>rLSc(r)!=null);
+  const avg=withSc.length?(withSc.reduce((s,r)=>s+rLSc(r),0)/withSc.length).toFixed(1):'–';
+  const top=[...withSc].sort((a,b)=>rLSc(b)-rLSc(a)).slice(0,5);
+  const cityMap={};DB.forEach(r=>{cityMap[r.city]=(cityMap[r.city]||0)+r.visits.length});
+  const cities=Object.entries(cityMap).sort((a,b)=>b[1]-a[1]);const maxC=cities[0]?.[1]||1;
+  const catMap={};DB.forEach(r=>{catMap[r.cat]=(catMap[r.cat]||0)+1});
+  const cats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);const maxCt=cats[0]?.[1]||1;
+  const cuisineMap={};DB.forEach(r=>{if(r.cuisine)cuisineMap[r.cuisine]=(cuisineMap[r.cuisine]||0)+1});
+  const cuisines=Object.entries(cuisineMap).sort((a,b)=>b[1]-a[1]).slice(0,8);const maxCu=cuisines[0]?.[1]||1;
+  const avgE=allV.filter(v=>v.sE!=null).length?(allV.filter(v=>v.sE!=null).reduce((s,v)=>s+v.sE,0)/allV.filter(v=>v.sE!=null).length).toFixed(1):'–';
+  const avgA=allV.filter(v=>v.sA!=null).length?(allV.filter(v=>v.sA!=null).reduce((s,v)=>s+v.sA,0)/allV.filter(v=>v.sA!=null).length).toFixed(1):'–';
+  const avgS=allV.filter(v=>v.sS!=null).length?(allV.filter(v=>v.sS!=null).reduce((s,v)=>s+v.sS,0)/allV.filter(v=>v.sS!=null).length).toFixed(1):'–';
+  sv.innerHTML=`<div class="sv-title">📊 Statistik</div>
+  <div class="sc"><div class="sc-t">Übersicht</div><div class="kpi-row">
+    <div class="kpi"><div class="kpi-v">${DB.length}</div><div class="kpi-l">Orte</div></div>
+    <div class="kpi"><div class="kpi-v">${allV.length}</div><div class="kpi-l">Besuche</div></div>
+    <div class="kpi"><div class="kpi-v">${avg}</div><div class="kpi-l">Ø Note</div></div>
+    <div class="kpi"><div class="kpi-v">${DB.filter(r=>r.fav).length}</div><div class="kpi-l">Favoriten</div></div>
+  </div></div>
+  <div class="sc"><div class="sc-t">Ø Einzelbewertungen</div><div class="kpi-row">
+    <div class="kpi"><div class="kpi-v">${avgE}</div><div class="kpi-l">🍽 Essen</div></div>
+    <div class="kpi"><div class="kpi-v">${avgA}</div><div class="kpi-l">✨ Ambiente</div></div>
+    <div class="kpi"><div class="kpi-v">${avgS}</div><div class="kpi-l">🤝 Service</div></div>
+  </div></div>
+  <div class="sc"><div class="sc-t">🏆 Top</div>${top.map((r,i)=>`<div class="top-item" onclick="openDetail(${r.id})"><div class="top-rank">${i+1}</div><div class="top-info"><div class="top-name">${r.name}</div><div class="top-sub">${r.city}${r.cuisine?' · '+r.cuisine:''}</div></div><div class="top-sc">${rLSc(r)}</div></div>`).join('')}</div>
+  <div class="sc"><div class="sc-t">📍 Nach Stadt</div>${cities.map(([c,n])=>`<div class="bar-i"><div class="bar-l">${c}</div><div class="bar-t"><div class="bar-f" style="width:${(n/maxC*100).toFixed(0)}%"></div></div><div class="bar-c">${n}</div></div>`).join('')}</div>
+  <div class="sc"><div class="sc-t">🗂 Nach Kategorie</div>${cats.map(([c,n])=>`<div class="bar-i"><div class="bar-l">${catIco(c)} ${c}</div><div class="bar-t"><div class="bar-f" style="width:${(n/maxCt*100).toFixed(0)}%"></div></div><div class="bar-c">${n}</div></div>`).join('')}</div>
+  ${cuisines.length?`<div class="sc"><div class="sc-t">🍜 Nach Küche</div>${cuisines.map(([c,n])=>`<div class="bar-i"><div class="bar-l">${c}</div><div class="bar-t"><div class="bar-f" style="width:${(n/maxCu*100).toFixed(0)}%"></div></div><div class="bar-c">${n}</div></div>`).join('')}</div>`:''}
+  <div style="padding:0 2px 20px"><button class="btn btn-g" style="width:100%;margin-top:4px" onclick="exportCSV()">📤 CSV Export</button></div>`;
 }
+
+/* ── MAP ── */
+const CITY_COORDS={'Wien':[48.2082,16.3738],'München':[48.1351,11.5820],'Regensburg':[49.0134,12.1016],'Bärnau':[49.8102,12.4521],'Berlin':[52.5200,13.4050],'Hamburg':[53.5753,10.0153],'Frankfurt':[50.1109,8.6821],'Köln':[50.9333,6.9500],'Stuttgart':[48.7758,9.1829],'Nürnberg':[49.4521,11.0767],'Dresden':[51.0504,13.7373],'Leipzig':[51.3397,12.3731],'Salzburg':[47.8095,13.0550],'Graz':[47.0707,15.4395],'Zürich':[47.3769,8.5417],'Paris':[48.8566,2.3522],'Rom':[41.9028,12.4964],'Barcelona':[41.3851,2.1734],'Prag':[50.0755,14.4378],'Budapest':[47.4979,19.0402],'Amsterdam':[52.3676,4.9041]};
+function getCoords(city){if(CITY_COORDS[city])return CITY_COORDS[city];let h=0;for(let i=0;i<city.length;i++)h=(h*31+city.charCodeAt(i))&0xffff;return[48.5+(h%200-100)*0.04,12+(h%300-150)*0.04];}
+function renderMap(){
+  const el=document.getElementById('mapEl');if(!el)return;
+  if(leafMap){try{leafMap.remove();}catch(e){}leafMap=null;}
+  try{
+    leafMap=L.map(el,{zoomControl:true,preferCanvas:true}).setView([50,12],5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:18}).addTo(leafMap);
+    const filtered=getFiltered();
+    if(!filtered.length)return;
+    const bounds=[];const offsets={};
+    filtered.forEach(r=>{
+      const base=getCoords(r.city);
+      const cnt=offsets[r.city]=(offsets[r.city]||0)+1;
+      const angle=(cnt-1)*(Math.PI*2/Math.max(6,filtered.filter(x=>x.city===r.city).length));
+      const dist=cnt===1?0:0.0015;
+      const ll=[base[0]+Math.sin(angle)*dist,base[1]+Math.cos(angle)*dist];
+      bounds.push(ll);
+      const lsc=rLSc(r);
+      const col=lsc==null?'#888':lsc>=8?'#4ade80':lsc>=6?'#fbbf24':'#f87171';
+      const txt=lsc!=null?lsc:catIco(r.cat);
+      const icon=L.divIcon({className:'',html:`<div style="width:38px;height:38px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:${lsc!=null?'13':'15'}px;font-weight:800;color:#111;box-shadow:0 2px 10px rgba(0,0,0,.35);border:2px solid white;cursor:pointer;font-family:Outfit,sans-serif">${txt}</div>`,iconSize:[38,38],iconAnchor:[19,19]});
+      const m=L.marker(ll,{icon}).addTo(leafMap);
+      m.on('click',()=>openDetail(r.id));
+      const lv=rLV(r);
+      m.bindTooltip(`<b>${r.name}</b><br>📍 ${r.city}${lsc?' · ⭐'+lsc:''}${lv?.date?' · '+fmtD(lv.date):''}`,{direction:'top',offset:[0,-22],opacity:.95});
+    });
+    if(bounds.length===1)leafMap.setView(bounds[0],13);
+    else try{leafMap.fitBounds(bounds,{padding:[50,50],maxZoom:14});}catch(e){}
+  }catch(e){document.getElementById('mapEl').innerHTML=`<div class="map-err"><span style="font-size:40px">🗺</span><span>Karte nicht verfügbar in der Vorschau.<br>Bitte Datei lokal im Browser öffnen.</span></div>`;}
+}
+function initMap(){renderMap();}
 
 /* ── EXPORT ── */
 function exportCSV(){
-  const h=['Datum','Stadt','Kategorie','Name','Gericht','Essen','Ambiente','Service','Gesamt','Empfehlung','Preis','Notizen','Maps'];
-  const rows=DB.map(e=>[e.date,e.city,e.cat,e.name,e.dish,e.sEssen??'',e.sAmb??'',e.sSvc??'',getScore(e)??'',e.rec,e.price,e.notes?.replace(/\n/g,' '),e.maps].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(';'));
+  const h=['Datum','Stadt','Kategorie','Name','Küche','Tags','Preis','Gericht','Essen','Ambiente','Service','Gesamt','Empfehlung','Notizen','Maps'];
+  const rows=[];DB.forEach(r=>r.visits.forEach(v=>{rows.push([v.date,r.city,r.cat,r.name,r.cuisine,r.tags.join(';'),r.price,v.dish,v.sE??'',v.sA??'',v.sS??'',vSc(v)??'',v.rec,v.notes?.replace(/\n/g,' '),r.maps].map(x=>`"${String(x||'').replace(/"/g,'""')}"`).join(';'));}));
   const blob=new Blob(['\uFEFF'+[h.join(';'),...rows].join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Tastemap.csv';a.click();
-  toast('📤 CSV exportiert');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Tastemap.csv';a.click();toast('📤 CSV exportiert');
 }
 
 /* ── OVERLAY HELPERS ── */
-function closeOverlay(id){document.getElementById(id).classList.remove('open')}
-function overlayClose(ev,id){if(ev.target===document.getElementById(id))closeOverlay(id)}
+function closeOv(id){document.getElementById(id).classList.remove('open');}
+function ovBg(ev,id){if(ev.target===document.getElementById(id))closeOv(id);}
+function shOvBg(ev,id){if(ev.target===document.getElementById(id))closeOv(id);}
 
 /* ── TOAST ── */
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2400);
-}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 
 /* ── INIT ── */
-renderCatBar();
-render();
+loadLS();populateCuisineSel();renderCatBar();render();
 </script>
 </body>
 </html>
