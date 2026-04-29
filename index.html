@@ -4,1425 +4,1064 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Tastemap</title>
-<link href="https://fonts.googleapis.com/css2?family=Samsung+One:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+:root {
+  --r: 20px; --rs: 14px; --rxs: 8px;
+  --t: 0.2s cubic-bezier(.4,0,.2,1);
+  --font: 'Outfit', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
   :root {
-    --radius: 20px;
-    --radius-sm: 12px;
-    --radius-xs: 8px;
-    --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
-    --font: 'Outfit', 'Segoe UI', sans-serif;
-    --shadow: 0 4px 24px rgba(0,0,0,0.10);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f0f0f;
-      --bg2: #1a1a1a;
-      --bg3: #242424;
-      --bg4: #2e2e2e;
-      --card: #1e1e1e;
-      --card2: #282828;
-      --border: rgba(255,255,255,0.08);
-      --text: #f0f0f0;
-      --text2: #a0a0a0;
-      --text3: #606060;
-      --accent: #6ec6f5;
-      --accent2: #3a8fd1;
-      --accent-bg: rgba(110,198,245,0.12);
-      --green: #4ade80;
-      --green-bg: rgba(74,222,128,0.12);
-      --yellow: #fbbf24;
-      --yellow-bg: rgba(251,191,36,0.12);
-      --red: #f87171;
-      --red-bg: rgba(248,113,113,0.12);
-      --pill-bg: #2a2a2a;
-      --pill-active: #6ec6f5;
-      --pill-active-text: #0f0f0f;
-      --nav-bg: rgba(15,15,15,0.92);
-      --overlay: rgba(0,0,0,0.7);
-      --star: #fbbf24;
-    }
-  }
-
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f5f5f7;
-      --bg2: #ebebed;
-      --bg3: #e0e0e2;
-      --bg4: #d5d5d8;
-      --card: #ffffff;
-      --card2: #f9f9fb;
-      --border: rgba(0,0,0,0.07);
-      --text: #111111;
-      --text2: #666666;
-      --text3: #aaaaaa;
-      --accent: #1a73e8;
-      --accent2: #1558b0;
-      --accent-bg: rgba(26,115,232,0.1);
-      --green: #16a34a;
-      --green-bg: rgba(22,163,74,0.10);
-      --yellow: #d97706;
-      --yellow-bg: rgba(217,119,6,0.10);
-      --red: #dc2626;
-      --red-bg: rgba(220,38,38,0.10);
-      --pill-bg: #e8e8ea;
-      --pill-active: #1a73e8;
-      --pill-active-text: #ffffff;
-      --nav-bg: rgba(245,245,247,0.92);
-      --overlay: rgba(0,0,0,0.5);
-      --star: #d97706;
-    }
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    max-width: 430px;
-    margin: 0 auto;
-    overflow-x: hidden;
-    position: relative;
-    padding-bottom: 90px;
-  }
-
-  /* HEADER */
-  .header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: var(--nav-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 20px 12px;
-  }
-
-  .header-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-
-  .app-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--text);
-  }
-
-  .app-title span {
-    color: var(--accent);
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  .icon-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--bg3);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    transition: var(--transition);
-    color: var(--text);
-  }
-
-  .icon-btn:active { transform: scale(0.92); background: var(--bg4); }
-
-  /* SEARCH */
-  .search-wrap {
-    position: relative;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: 11px 16px 11px 42px;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border);
-    background: var(--bg3);
-    color: var(--text);
-    font-size: 15px;
-    font-family: var(--font);
-    outline: none;
-    transition: var(--transition);
-  }
-
-  .search-input:focus {
-    border-color: var(--accent);
-    background: var(--card);
-  }
-
-  .search-icon {
-    position: absolute;
-    left: 13px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text3);
-    font-size: 16px;
-    pointer-events: none;
-  }
-
-  /* FILTER PILLS */
-  .filter-section {
-    padding: 14px 20px 0;
-  }
-
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 12px;
-    scrollbar-width: none;
-  }
-
-  .filter-row::-webkit-scrollbar { display: none; }
-
-  .pill {
-    flex-shrink: 0;
-    padding: 6px 14px;
-    border-radius: 100px;
-    background: var(--pill-bg);
-    border: 1.5px solid var(--border);
-    color: var(--text2);
-    font-size: 13px;
-    font-weight: 500;
-    font-family: var(--font);
-    cursor: pointer;
-    transition: var(--transition);
-    white-space: nowrap;
-  }
-
-  .pill.active {
-    background: var(--pill-active);
-    color: var(--pill-active-text);
-    border-color: var(--pill-active);
-  }
-
-  .pill:active { transform: scale(0.95); }
-
-  /* STATS BAR */
-  .stats-bar {
-    display: flex;
-    gap: 10px;
-    padding: 0 20px 16px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .stats-bar::-webkit-scrollbar { display: none; }
-
-  .stat-chip {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: var(--card);
-    border-radius: var(--radius-sm);
-    padding: 10px 16px;
-    border: 1px solid var(--border);
-    min-width: 80px;
-  }
-
-  .stat-val {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--accent);
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--text3);
-    margin-top: 3px;
-    font-weight: 500;
-    text-align: center;
-  }
-
-  /* SECTION HEADER */
-  .section-header {
-    padding: 6px 20px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .section-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-  }
-
-  /* CARDS */
-  .cards-list {
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .card {
-    background: var(--card);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    cursor: pointer;
-    transition: var(--transition);
-    animation: slideIn 0.3s ease both;
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .card:active { transform: scale(0.985); }
-
-  .card-inner {
-    padding: 16px;
-  }
-
-  .card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .card-left { flex: 1; min-width: 0; }
-
-  .card-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .meta-tag {
-    font-size: 12px;
-    color: var(--text2);
-    background: var(--bg3);
-    padding: 2px 8px;
-    border-radius: 100px;
-    font-weight: 500;
-  }
-
-  .cat-icon { font-size: 13px; }
-
-  .card-score {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    font-weight: 800;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-
-  .score-high { background: var(--green-bg); color: var(--green); }
-  .score-mid  { background: var(--yellow-bg); color: var(--yellow); }
-  .score-low  { background: var(--red-bg); color: var(--red); }
-  .score-none { background: var(--bg3); color: var(--text3); font-size: 20px; }
-
-  .card-dish {
-    font-size: 13px;
-    color: var(--text2);
-    margin-bottom: 8px;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .card-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .rec-badge {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 100px;
-  }
-
-  .rec-yes   { background: var(--green-bg); color: var(--green); }
-  .rec-maybe { background: var(--yellow-bg); color: var(--yellow); }
-  .rec-no    { background: var(--red-bg); color: var(--red); }
-
-  .card-right-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .price-tag {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-  }
-
-  .date-tag {
-    font-size: 11px;
-    color: var(--text3);
-  }
-
-  .fav-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 2px;
-    transition: var(--transition);
-    line-height: 1;
-  }
-
-  .fav-btn:active { transform: scale(1.3); }
-
-  /* CITY GROUP DIVIDER */
-  .city-divider {
-    padding: 18px 20px 6px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .city-name {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text);
-  }
-
-  .city-count {
-    font-size: 12px;
-    color: var(--text3);
-    background: var(--bg3);
-    padding: 2px 8px;
-    border-radius: 100px;
-  }
-
-  /* BOTTOM NAV */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 430px;
-    background: var(--nav-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
-    z-index: 100;
-  }
-
-  .nav-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
-    color: var(--text3);
-  }
-
-  .nav-btn.active { color: var(--accent); }
-  .nav-btn:active { transform: scale(0.9); }
-
-  .nav-icon { font-size: 22px; line-height: 1; }
-  .nav-label { font-size: 11px; font-weight: 600; font-family: var(--font); }
-
-  /* FAB */
-  .fab {
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    color: var(--pill-active-text);
-    box-shadow: 0 4px 20px rgba(110,198,245,0.4);
-    transition: var(--transition);
-    margin-top: -20px;
-  }
-
-  .fab:active { transform: scale(0.92); }
-
-  /* MODAL */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--overlay);
-    z-index: 200;
-    display: flex;
-    align-items: flex-end;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  .modal {
-    background: var(--card);
-    border-radius: 28px 28px 0 0;
-    width: 100%;
-    max-width: 430px;
-    margin: 0 auto;
-    padding: 8px 20px 40px;
-    max-height: 90vh;
-    overflow-y: auto;
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.34,1.26,0.64,1);
-  }
-
-  .modal-overlay.open .modal {
-    transform: translateY(0);
-  }
-
-  .modal-handle {
-    width: 40px;
-    height: 4px;
-    background: var(--bg4);
-    border-radius: 2px;
-    margin: 8px auto 20px;
-  }
-
-  .modal-title {
-    font-size: 20px;
-    font-weight: 800;
-    margin-bottom: 20px;
-    color: var(--text);
-  }
-
-  .form-group {
-    margin-bottom: 16px;
-  }
-
-  .form-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 6px;
-    display: block;
-  }
-
-  .form-input, .form-select, .form-textarea {
-    width: 100%;
-    padding: 12px 14px;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border);
-    background: var(--bg3);
-    color: var(--text);
-    font-size: 15px;
-    font-family: var(--font);
-    outline: none;
-    transition: var(--transition);
-  }
-
-  .form-input:focus, .form-select:focus, .form-textarea:focus {
-    border-color: var(--accent);
-    background: var(--card);
-  }
-
-  .form-textarea { resize: none; min-height: 80px; }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .score-slider-wrap {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .score-slider {
-    flex: 1;
-    -webkit-appearance: none;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--bg4);
-    outline: none;
-  }
-
-  .score-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
-
-  .score-display {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--accent-bg);
-    color: var(--accent);
-    font-weight: 800;
-    font-size: 17px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .rec-toggle {
-    display: flex;
-    gap: 8px;
-  }
-
-  .rec-option {
-    flex: 1;
-    padding: 10px;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border);
-    background: var(--bg3);
-    color: var(--text2);
-    font-size: 13px;
-    font-weight: 600;
-    font-family: var(--font);
-    cursor: pointer;
-    text-align: center;
-    transition: var(--transition);
-  }
-
-  .rec-option.sel-yes   { background: var(--green-bg); color: var(--green); border-color: var(--green); }
-  .rec-option.sel-maybe { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow); }
-  .rec-option.sel-no    { background: var(--red-bg); color: var(--red); border-color: var(--red); }
-
-  .save-btn {
-    width: 100%;
-    padding: 16px;
-    background: var(--accent);
-    color: var(--pill-active-text);
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 16px;
-    font-weight: 700;
-    font-family: var(--font);
-    cursor: pointer;
-    transition: var(--transition);
-    margin-top: 8px;
-  }
-
-  .save-btn:active { transform: scale(0.98); opacity: 0.9; }
-
-  /* DETAIL MODAL */
-  .detail-modal .modal {
-    padding-bottom: 50px;
-  }
-
-  .detail-score-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .detail-score-circle {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 24px;
-    flex-shrink: 0;
-  }
-
-  .detail-score-label { font-size: 10px; font-weight: 600; margin-top: 1px; }
-
-  .detail-name {
-    font-size: 22px;
-    font-weight: 800;
-    line-height: 1.2;
-    color: var(--text);
-  }
-
-  .detail-city {
-    font-size: 14px;
-    color: var(--text2);
-    margin-top: 2px;
-  }
-
-  .detail-section {
-    background: var(--bg3);
-    border-radius: var(--radius-sm);
-    padding: 14px;
-    margin-bottom: 10px;
-  }
-
-  .detail-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 6px;
-  }
-
-  .detail-section-text {
-    font-size: 14px;
-    color: var(--text);
-    line-height: 1.5;
-  }
-
-  .detail-tags-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
-
-  .detail-tag {
-    font-size: 13px;
-    font-weight: 600;
-    padding: 5px 12px;
-    border-radius: 100px;
-    background: var(--accent-bg);
-    color: var(--accent);
-  }
-
-  .maps-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 14px;
-    background: var(--accent-bg);
-    color: var(--accent);
-    border: 1.5px solid var(--accent);
-    border-radius: var(--radius-sm);
-    font-size: 15px;
-    font-weight: 700;
-    font-family: var(--font);
-    cursor: pointer;
-    text-decoration: none;
-    transition: var(--transition);
-    margin-top: 12px;
-  }
-
-  .maps-btn:active { opacity: 0.8; }
-
-  /* EMPTY */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text3);
-  }
-
-  .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-text { font-size: 15px; }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--text);
-    color: var(--bg);
-    padding: 10px 20px;
-    border-radius: 100px;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 300;
-    opacity: 0;
-    transition: all 0.3s ease;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* STATS VIEW */
-  .stats-view {
-    display: none;
-    padding: 0 16px 20px;
-  }
-
-  .stats-view.active { display: block; }
-
-  .stats-card {
-    background: var(--card);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    padding: 18px;
-    margin-bottom: 12px;
-  }
-
-  .stats-card-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text2);
-    margin-bottom: 14px;
-  }
-
-  .top-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .top-item:last-child { border-bottom: none; }
-
-  .top-rank {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--accent-bg);
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .top-info { flex: 1; min-width: 0; }
-  .top-name { font-size: 14px; font-weight: 600; color: var(--text); }
-  .top-sub  { font-size: 12px; color: var(--text3); }
-  .top-score { font-size: 15px; font-weight: 800; color: var(--accent); }
-
-  .bar-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .bar-label { font-size: 13px; font-weight: 600; color: var(--text2); width: 70px; flex-shrink: 0; }
-  .bar-track { flex: 1; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
-  .bar-fill  { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.6s ease; }
-  .bar-count { font-size: 12px; color: var(--text3); width: 20px; text-align: right; flex-shrink: 0; }
-
-  .main-view { display: block; }
-  .main-view.hidden { display: none; }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 0; }
+    --bg:#0d0d0d; --bg2:#161616; --bg3:#1f1f1f; --bg4:#2a2a2a; --bg5:#333;
+    --card:#181818; --card2:#202020;
+    --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+    --text:#f2f2f2; --text2:#909090; --text3:#505050;
+    --acc:#5eb8f5; --acc2:#3a8fd1; --acc-bg:rgba(94,184,245,.13);
+    --green:#4ade80; --green-bg:rgba(74,222,128,.13);
+    --yellow:#fbbf24; --yellow-bg:rgba(251,191,36,.13);
+    --red:#f87171; --red-bg:rgba(248,113,113,.13);
+    --pill:#242424; --pill-act:#5eb8f5; --pill-act-t:#0d0d0d;
+    --nav:rgba(13,13,13,.93);
+    --ov:rgba(0,0,0,.75);
+    --shadow:0 8px 40px rgba(0,0,0,.4);
+    --shadow2:0 2px 12px rgba(0,0,0,.3);
+  }
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:#f2f2f5; --bg2:#e8e8ec; --bg3:#dededf; --bg4:#d0d0d5; --bg5:#c5c5cb;
+    --card:#fff; --card2:#f8f8fb;
+    --border:rgba(0,0,0,.07); --border2:rgba(0,0,0,.13);
+    --text:#111; --text2:#666; --text3:#aaa;
+    --acc:#1a73e8; --acc2:#1558b0; --acc-bg:rgba(26,115,232,.1);
+    --green:#16a34a; --green-bg:rgba(22,163,74,.1);
+    --yellow:#d97706; --yellow-bg:rgba(217,119,6,.1);
+    --red:#dc2626; --red-bg:rgba(220,38,38,.1);
+    --pill:#e4e4e8; --pill-act:#1a73e8; --pill-act-t:#fff;
+    --nav:rgba(242,242,245,.93);
+    --ov:rgba(0,0,0,.5);
+    --shadow:0 8px 40px rgba(0,0,0,.12);
+    --shadow2:0 2px 12px rgba(0,0,0,.08);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;position:relative;display:flex;flex-direction:column}
+
+/* ── SCROLLABLE MAIN ── */
+#appShell{display:flex;flex-direction:column;height:100%;overflow:hidden}
+#scrollArea{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:100px}
+#scrollArea::-webkit-scrollbar{display:none}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:90;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 18px 10px}
+.hdr-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.logo{font-size:24px;font-weight:900;letter-spacing:-.5px}.logo em{color:var(--acc);font-style:normal}
+.hdr-btns{display:flex;gap:7px}
+.ico-btn{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;transition:var(--t);color:var(--text)}
+.ico-btn:active{transform:scale(.9)}
+.ico-btn.on{background:var(--acc-bg);color:var(--acc)}
+.search-wrap{position:relative;margin-bottom:10px}
+.search-inp{width:100%;padding:10px 14px 10px 40px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:var(--t)}
+.search-inp:focus{border-color:var(--acc);background:var(--card)}
+.search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
+
+/* filter bar */
+.filter-bar{padding:0 18px 12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:6px 13px;border-radius:100px;background:var(--pill);border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t);white-space:nowrap;user-select:none}
+.pill.on{background:var(--pill-act);color:var(--pill-act-t);border-color:var(--pill-act)}
+.pill:active{transform:scale(.93)}
+.pill-btn{background:none;border:none}
+
+/* ── STATS CHIPS ── */
+.stats-row{display:flex;gap:9px;padding:10px 18px 4px;overflow-x:auto;scrollbar-width:none}
+.stats-row::-webkit-scrollbar{display:none}
+.stat-chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;cursor:pointer;transition:var(--t);min-width:72px;text-align:center;user-select:none}
+.stat-chip:active{transform:scale(.94)}
+.stat-chip.on{border-color:var(--acc);background:var(--acc-bg)}
+.stat-v{font-size:20px;font-weight:800;color:var(--acc);line-height:1}
+.stat-l{font-size:11px;color:var(--text3);font-weight:600;margin-top:3px}
+
+/* ── SECTION ── */
+.city-hdr{padding:16px 18px 6px;display:flex;align-items:center;gap:9px}
+.city-name{font-size:17px;font-weight:800}
+.city-cnt{font-size:12px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:100px}
+
+/* ── LIST VIEW ── */
+.list-wrap{padding:0 14px;display:flex;flex-direction:column;gap:10px}
+
+.entry-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:var(--t);animation:slideIn .25s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.entry-card:active{transform:scale(.985)}
+
+.card-img-strip{width:100%;height:140px;object-fit:cover;display:block}
+.card-inner{padding:14px}
+.card-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.card-name{font-size:16px;font-weight:700;line-height:1.25;flex:1;min-width:0}
+.score-bubble{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;flex-direction:column;gap:0}
+.score-bubble .sub-lbl{font-size:8px;font-weight:700;opacity:.7;margin-top:1px}
+.sh{background:var(--green-bg);color:var(--green)}
+.sm{background:var(--yellow-bg);color:var(--yellow)}
+.sl{background:var(--red-bg);color:var(--red)}
+.sn{background:var(--bg3);color:var(--text3);font-size:18px}
+
+.card-meta-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tag{font-size:12px;color:var(--text2);background:var(--bg3);padding:2px 8px;border-radius:100px;font-weight:500;white-space:nowrap}
+.tag.city{background:var(--acc-bg);color:var(--acc)}
+
+.card-dish{font-size:13px;color:var(--text2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-bottom{display:flex;align-items:center;justify-content:space-between}
+.rec-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:100px}
+.ry{background:var(--green-bg);color:var(--green)}
+.rm{background:var(--yellow-bg);color:var(--yellow)}
+.rn{background:var(--red-bg);color:var(--red)}
+.card-right{display:flex;align-items:center;gap:8px}
+.price-tag{font-size:13px;font-weight:700;color:var(--acc)}
+.fav-btn{background:none;border:none;font-size:19px;cursor:pointer;padding:2px;line-height:1;transition:var(--t)}
+.fav-btn:active{transform:scale(1.35)}
+
+/* sub-score dots in list */
+.sub-scores{display:flex;gap:10px;margin-top:6px}
+.sub-s{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sub-s-val{font-size:11px;font-weight:700;color:var(--text2)}
+.sub-s-lbl{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+
+/* ── GRID VIEW ── */
+.grid-wrap{padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:var(--t);animation:slideIn .25s ease both}
+.grid-card:active{transform:scale(.96)}
+.grid-img{width:100%;height:110px;object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:32px}
+.grid-body{padding:10px}
+.grid-name{font-size:13px;font-weight:700;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
+.grid-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.grid-city{font-size:11px;color:var(--acc);font-weight:600}
+.grid-score{font-size:14px;font-weight:800;color:var(--text)}
+.grid-score.sh{color:var(--green)}
+.grid-score.sm{color:var(--yellow)}
+.grid-score.sl{color:var(--red)}
+.grid-score.sn{color:var(--text3)}
+.grid-rec{font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px}
+.grid-fav{font-size:15px;line-height:1}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:sticky;bottom:0;z-index:90;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:10px 0 max(12px,env(safe-area-inset-bottom))}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 14px;border-radius:var(--rs);transition:var(--t);color:var(--text3);font-family:var(--font)}
+.nav-btn.on{color:var(--acc)}
+.nav-btn:active{transform:scale(.88)}
+.nav-ico{font-size:21px;line-height:1}
+.nav-lbl{font-size:10px;font-weight:700}
+.fab{width:54px;height:54px;border-radius:50%;background:var(--acc);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--pill-act-t);box-shadow:0 4px 20px rgba(94,184,245,.4);transition:var(--t);margin-top:-16px;flex-shrink:0}
+.fab:active{transform:scale(.9)}
+
+/* ── OVERLAY / SHEET ── */
+.overlay{position:fixed;inset:0;background:var(--ov);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s ease}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{background:var(--card);border-radius:26px 26px 0 0;width:100%;max-width:430px;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .32s cubic-bezier(.34,1.1,.64,1);padding:0 20px 48px;scrollbar-width:none}
+.sheet::-webkit-scrollbar{display:none}
+.overlay.open .sheet{transform:translateY(0)}
+.sheet-handle{width:38px;height:4px;background:var(--bg4);border-radius:2px;margin:10px auto 18px}
+.sheet-title{font-size:20px;font-weight:800;margin-bottom:18px}
+
+/* form */
+.fg{margin-bottom:14px}
+.fl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;display:block}
+.fi,.fs,.ft{width:100%;padding:11px 13px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:var(--t)}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--acc);background:var(--card)}
+.ft{resize:none;min-height:72px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* score sliders */
+.slider-group{display:flex;flex-direction:column;gap:10px}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-name{font-size:12px;font-weight:700;color:var(--text2);width:60px;flex-shrink:0}
+.slider{flex:1;-webkit-appearance:none;height:5px;border-radius:3px;background:var(--bg4);outline:none;cursor:pointer}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--acc);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.slider-val{width:32px;height:32px;border-radius:50%;background:var(--acc-bg);color:var(--acc);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.total-score{text-align:center;padding:12px;background:var(--bg3);border-radius:var(--rs);margin-top:8px}
+.total-score .ts-num{font-size:32px;font-weight:900;color:var(--acc)}
+.total-score .ts-lbl{font-size:12px;color:var(--text3);font-weight:600}
+
+/* rec toggle */
+.rec-tog{display:flex;gap:7px}
+.rec-opt{flex:1;padding:9px 6px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;text-align:center;transition:var(--t)}
+.rec-opt.sel-y{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+.rec-opt.sel-m{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow)}
+.rec-opt.sel-n{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+
+/* image upload */
+.img-upload-area{width:100%;height:130px;border-radius:var(--rs);border:2px dashed var(--border2);background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);position:relative;overflow:hidden}
+.img-upload-area:hover{border-color:var(--acc)}
+.img-preview{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.img-upload-hint{font-size:13px;color:var(--text3);font-weight:600;text-align:center;z-index:1}
+.img-upload-icon{font-size:28px;margin-bottom:6px;z-index:1}
+.img-remove{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+
+/* buttons */
+.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn{flex:1;padding:14px;border-radius:var(--rs);border:none;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.btn:active{transform:scale(.97);opacity:.9}
+.btn-primary{background:var(--acc);color:var(--pill-act-t)}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1.5px solid var(--border)}
+
+/* ── DETAIL SHEET ── */
+.detail-hero{width:calc(100% + 40px);margin:-0px -20px 0;height:200px;object-fit:cover;display:block}
+.detail-hero-placeholder{width:calc(100% + 40px);margin:0 -20px;height:160px;display:flex;align-items:center;justify-content:center;font-size:56px;background:var(--bg3)}
+.detail-score-row{display:flex;align-items:flex-start;gap:14px;padding:16px 0 12px}
+.detail-big-score{width:72px;height:72px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:24px;flex-shrink:0}
+.detail-big-score .dbl{font-size:10px;font-weight:700;margin-top:1px;opacity:.7}
+.detail-title{font-size:22px;font-weight:900;line-height:1.2;margin-bottom:3px}
+.detail-city-row{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.detail-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.detail-tag{font-size:13px;font-weight:700;padding:5px 12px;border-radius:100px;background:var(--acc-bg);color:var(--acc)}
+.detail-section{background:var(--bg3);border-radius:var(--rs);padding:14px;margin-bottom:10px}
+.detail-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.detail-section-text{font-size:14px;color:var(--text);line-height:1.55}
+.sub-score-row{display:flex;justify-content:space-around;padding:10px 0}
+.sub-score-item{display:flex;flex-direction:column;align-items:center;gap:3px}
+.sub-score-val{font-size:22px;font-weight:900;color:var(--acc)}
+.sub-score-lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.detail-action-row{display:flex;gap:8px;margin-top:12px}
+.detail-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 8px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;text-decoration:none;transition:var(--t)}
+.detail-btn:active{transform:scale(.95)}
+.detail-btn.accent{background:var(--acc-bg);color:var(--acc);border-color:var(--acc)}
+.detail-btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+
+/* ── STATS VIEW ── */
+.stats-view{padding:0 16px 20px}
+.stats-view-title{font-size:22px;font-weight:900;padding:16px 2px 12px}
+.stats-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.scard-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.top-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.top-item:last-child{border-bottom:none}
+.top-rank{width:24px;height:24px;border-radius:50%;background:var(--acc-bg);color:var(--acc);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.top-info{flex:1;min-width:0}
+.top-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-sub{font-size:11px;color:var(--text3)}
+.top-sc{font-size:15px;font-weight:900;color:var(--acc)}
+.bar-item{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-lbl{font-size:12px;font-weight:700;color:var(--text2);width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:var(--acc);transition:width .6s ease}
+.bar-cnt{font-size:11px;color:var(--text3);width:18px;text-align:right;flex-shrink:0}
+.kpi-row{display:flex;justify-content:space-around;padding:6px 0}
+.kpi{display:flex;flex-direction:column;align-items:center;gap:3px}
+.kpi-v{font-size:24px;font-weight:900;color:var(--acc)}
+.kpi-l{font-size:11px;color:var(--text3);font-weight:700}
+
+/* ── FILTER PANEL ── */
+.filter-panel-body{display:flex;flex-direction:column;gap:18px}
+.fp-group-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.fp-pills{display:flex;flex-wrap:wrap;gap:7px}
+.fp-pill{padding:7px 13px;border-radius:100px;background:var(--pill);border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t);user-select:none}
+.fp-pill.on{background:var(--pill-act);color:var(--pill-act-t);border-color:var(--pill-act)}
+.fp-pill:active{transform:scale(.93)}
+.fp-range{display:flex;align-items:center;gap:10px}
+.fp-range label{font-size:13px;color:var(--text2);font-weight:600;white-space:nowrap}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-ico{font-size:48px;margin-bottom:12px}
+.empty-t{font-size:15px;font-weight:600}
+
+/* toast */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;z-index:400;opacity:0;transition:all .28s ease;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* view toggle */
+.view-toggle{display:flex;gap:5px}
+.vt-btn{width:32px;height:32px;border-radius:var(--rxs);background:var(--bg3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:var(--t);color:var(--text3)}
+.vt-btn.on{background:var(--acc-bg);color:var(--acc)}
+.vt-btn:active{transform:scale(.9)}
 </style>
 </head>
 <body>
+<div id="appShell">
 
 <!-- HEADER -->
-<div class="header">
-  <div class="header-top">
-    <div class="app-title">Taste<span>map</span></div>
-    <div class="header-actions">
-      <button class="icon-btn" id="sortBtn" title="Sortieren">⇅</button>
-      <button class="icon-btn" id="favFilterBtn" title="Favoriten">🤍</button>
+<div class="hdr">
+  <div class="hdr-row1">
+    <div class="logo">Taste<em>map</em></div>
+    <div class="hdr-btns">
+      <div class="view-toggle">
+        <button class="vt-btn on" id="btnList" onclick="setView('list')" title="Liste">☰</button>
+        <button class="vt-btn" id="btnGrid" onclick="setView('grid')" title="Raster">⊞</button>
+      </div>
+      <button class="ico-btn" id="btnSort" onclick="cycleSort()" title="Sortieren">⇅</button>
+      <button class="ico-btn" id="btnFilter" onclick="openFilter()" title="Filter">⚙</button>
     </div>
   </div>
   <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" type="text" id="searchInput" placeholder="Restaurant, Stadt, Gericht suchen…">
+    <span class="search-ico">🔍</span>
+    <input class="search-inp" id="searchInp" placeholder="Name, Stadt, Gericht, Notiz …" oninput="render()">
   </div>
+  <div class="filter-bar" id="catFilter"></div>
 </div>
 
-<!-- FILTER PILLS -->
-<div class="filter-section">
-  <div class="filter-row" id="categoryFilter">
-    <button class="pill active" data-val="all">Alle</button>
-    <button class="pill" data-val="Restaurant">🍽 Restaurant</button>
-    <button class="pill" data-val="Bar">🍹 Bar</button>
-    <button class="pill" data-val="Club">🎵 Club</button>
-    <button class="pill" data-val="Cafe">☕ Café</button>
-    <button class="pill" data-val="Hotel">🏨 Hotel</button>
-    <button class="pill" data-val="Geschäft">🛍 Geschäft</button>
-    <button class="pill" data-val="Kultur">🎨 Kultur</button>
-  </div>
+<!-- SCROLL AREA -->
+<div id="scrollArea">
+  <!-- STATS CHIPS -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- MAIN / STATS VIEW -->
+  <div id="mainView"></div>
+  <div id="statsView" style="display:none"></div>
 </div>
-
-<!-- MAIN VIEW -->
-<div class="main-view" id="mainView">
-  <!-- STATS BAR -->
-  <div class="stats-bar" id="statsBar"></div>
-
-  <!-- CARDS -->
-  <div id="cardsContainer"></div>
-</div>
-
-<!-- STATS VIEW -->
-<div class="stats-view" id="statsView"></div>
 
 <!-- BOTTOM NAV -->
-<nav class="bottom-nav">
-  <button class="nav-btn active" id="navHome" onclick="switchTab('home')">
-    <span class="nav-icon">🗺</span>
-    <span class="nav-label">Entdecken</span>
-  </button>
-  <button class="nav-btn" id="navFavs" onclick="switchTab('favs')">
-    <span class="nav-icon">❤️</span>
-    <span class="nav-label">Favoriten</span>
-  </button>
-  <button class="fab" onclick="openAddModal()">＋</button>
-  <button class="nav-btn" id="navStats" onclick="switchTab('stats')">
-    <span class="nav-icon">📊</span>
-    <span class="nav-label">Statistik</span>
-  </button>
-  <button class="nav-btn" id="navMap" onclick="exportData()">
-    <span class="nav-icon">📤</span>
-    <span class="nav-label">Export</span>
-  </button>
+<nav class="bnav">
+  <button class="nav-btn on" id="nb0" onclick="switchTab(0)"><span class="nav-ico">🗺</span><span class="nav-lbl">Entdecken</span></button>
+  <button class="nav-btn"    id="nb1" onclick="switchTab(1)"><span class="nav-ico">❤️</span><span class="nav-lbl">Favoriten</span></button>
+  <button class="fab" onclick="openForm(null)">＋</button>
+  <button class="nav-btn"    id="nb2" onclick="switchTab(2)"><span class="nav-ico">📊</span><span class="nav-lbl">Statistik</span></button>
+  <button class="nav-btn"    id="nb3" onclick="exportCSV()"><span class="nav-ico">📤</span><span class="nav-lbl">Export</span></button>
 </nav>
-
-<!-- ADD MODAL -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">✦ Neuer Eintrag</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Stadt</label>
-        <input class="form-input" id="inp-city" placeholder="z.B. Wien">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Datum</label>
-        <input class="form-input" id="inp-date" type="date">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Name</label>
-      <input class="form-input" id="inp-name" placeholder="Restaurantname">
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Kategorie</label>
-        <select class="form-select" id="inp-cat">
-          <option value="Restaurant">🍽 Restaurant</option>
-          <option value="Bar">🍹 Bar</option>
-          <option value="Club">🎵 Club</option>
-          <option value="Cafe">☕ Café</option>
-          <option value="Hotel">🏨 Hotel</option>
-          <option value="Geschäft">🛍 Geschäft</option>
-          <option value="Kultur">🎨 Kultur</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Preis</label>
-        <select class="form-select" id="inp-price">
-          <option value="€">€ Günstig</option>
-          <option value="€€" selected>€€ Mittel</option>
-          <option value="€€€">€€€ Gehoben</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Gericht / Aktivität</label>
-      <input class="form-input" id="inp-dish" placeholder="z.B. Schnitzel mit Pommes">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Bewertung <span id="scoreVal">–</span></label>
-      <div class="score-slider-wrap">
-        <input class="score-slider" type="range" id="inp-score" min="1" max="10" step="0.5" value="5">
-        <div class="score-display" id="scoreCircle">5</div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Empfehlung</label>
-      <div class="rec-toggle">
-        <button class="rec-option sel-yes" data-rec="Ja" onclick="setRec(this,'Ja')">👍 Ja</button>
-        <button class="rec-option" data-rec="Geht so" onclick="setRec(this,'Geht so')">🤷 Geht so</button>
-        <button class="rec-option" data-rec="Nein" onclick="setRec(this,'Nein')">👎 Nein</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Notizen</label>
-      <textarea class="form-textarea" id="inp-notes" placeholder="Bewertung, Tipps, Besonderheiten…"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Google Maps Link</label>
-      <input class="form-input" id="inp-maps" placeholder="https://maps.app.goo.gl/…">
-    </div>
-    <button class="save-btn" onclick="saveEntry()">Eintrag speichern</button>
-  </div>
 </div>
 
-<!-- DETAIL MODAL -->
-<div class="modal-overlay detail-modal" id="detailModal">
-  <div class="modal" id="detailContent"></div>
+<!-- ── ADD/EDIT SHEET ── -->
+<div class="overlay" id="formOverlay" onclick="overlayClose(event,'formOverlay')">
+<div class="sheet" id="formSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="formTitle">Neuer Eintrag</div>
+  <input type="hidden" id="editId">
+
+  <!-- IMAGE UPLOAD -->
+  <div class="fg">
+    <label class="fl">Foto (optional)</label>
+    <div class="img-upload-area" id="imgArea" onclick="document.getElementById('imgInp').click()">
+      <img id="imgPreview" class="img-preview" style="display:none">
+      <div class="img-upload-icon">📷</div>
+      <div class="img-upload-hint">Tippen zum Foto hinzufügen</div>
+    </div>
+    <input type="file" id="imgInp" accept="image/*" style="display:none" onchange="handleImg(this)">
+    <button class="img-remove" id="imgRemove" style="display:none" onclick="removeImg(event)">✕</button>
+  </div>
+
+  <div class="frow">
+    <div class="fg"><label class="fl">Stadt *</label><input class="fi" id="f-city" list="cityList" placeholder="z.B. Wien"></div>
+    <div class="fg"><label class="fl">Datum</label><input class="fi" id="f-date" type="date"></div>
+  </div>
+  <datalist id="cityList"></datalist>
+
+  <div class="fg"><label class="fl">Name *</label><input class="fi" id="f-name" placeholder="Restaurantname"></div>
+
+  <div class="frow">
+    <div class="fg">
+      <label class="fl">Kategorie</label>
+      <select class="fs" id="f-cat">
+        <option value="Restaurant">🍽 Restaurant</option>
+        <option value="Bar">🍹 Bar</option>
+        <option value="Club">🎵 Club</option>
+        <option value="Cafe">☕ Café</option>
+        <option value="Hotel">🏨 Hotel</option>
+        <option value="Geschäft">🛍 Geschäft</option>
+        <option value="Kultur">🎨 Kultur</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Preis</label>
+      <select class="fs" id="f-price">
+        <option value="€">€ Günstig</option>
+        <option value="€€" selected>€€ Mittel</option>
+        <option value="€€€">€€€ Gehoben</option>
+        <option value="">– unbekannt</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="fg"><label class="fl">Gericht / Aktivität</label><input class="fi" id="f-dish" placeholder="z.B. Schnitzel mit Pommes"></div>
+
+  <!-- SCORES -->
+  <div class="fg">
+    <label class="fl">Bewertung</label>
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-name">🍽 Essen</span>
+        <input class="slider" type="range" id="f-s-essen" min="1" max="10" step="0.5" value="5" oninput="updateScores()">
+        <div class="slider-val" id="sv-essen">5</div>
+      </div>
+      <div class="slider-row">
+        <span class="slider-name">✨ Ambiente</span>
+        <input class="slider" type="range" id="f-s-amb" min="1" max="10" step="0.5" value="5" oninput="updateScores()">
+        <div class="slider-val" id="sv-amb">5</div>
+      </div>
+      <div class="slider-row">
+        <span class="slider-name">🤝 Service</span>
+        <input class="slider" type="range" id="f-s-svc" min="1" max="10" step="0.5" value="5" oninput="updateScores()">
+        <div class="slider-val" id="sv-svc">5</div>
+      </div>
+    </div>
+    <div class="total-score" id="totalScoreBox">
+      <div class="ts-num" id="totalScoreNum">5.0</div>
+      <div class="ts-lbl">Gesamtnote (Durchschnitt)</div>
+    </div>
+  </div>
+
+  <div class="fg">
+    <label class="fl">Empfehlung</label>
+    <div class="rec-tog">
+      <button class="rec-opt sel-y" data-r="Ja" onclick="setRec(this,'Ja')">👍 Ja</button>
+      <button class="rec-opt" data-r="Geht so" onclick="setRec(this,'Geht so')">🤷 Geht so</button>
+      <button class="rec-opt" data-r="Nein" onclick="setRec(this,'Nein')">👎 Nein</button>
+    </div>
+  </div>
+
+  <div class="fg"><label class="fl">Notizen</label><textarea class="ft" id="f-notes" placeholder="Eindrücke, Tipps, Besonderheiten …"></textarea></div>
+  <div class="fg"><label class="fl">Google Maps Link</label><input class="fi" id="f-maps" placeholder="https://maps.app.goo.gl/…"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="closeOverlay('formOverlay')">Abbrechen</button>
+    <button class="btn btn-primary" onclick="saveEntry()">Speichern</button>
+  </div>
+</div>
+</div>
+
+<!-- ── DETAIL SHEET ── -->
+<div class="overlay" id="detailOverlay" onclick="overlayClose(event,'detailOverlay')">
+<div class="sheet" id="detailSheet"></div>
+</div>
+
+<!-- ── FILTER SHEET ── -->
+<div class="overlay" id="filterOverlay" onclick="overlayClose(event,'filterOverlay')">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Filter & Sortierung</div>
+  <div class="filter-panel-body">
+    <div>
+      <div class="fp-group-title">📍 Städte</div>
+      <div class="fp-pills" id="fp-cities"></div>
+    </div>
+    <div>
+      <div class="fp-group-title">🗂 Kategorien</div>
+      <div class="fp-pills" id="fp-cats"></div>
+    </div>
+    <div>
+      <div class="fp-group-title">👍 Empfehlung</div>
+      <div class="fp-pills" id="fp-recs">
+        <button class="fp-pill" data-r="Ja" onclick="toggleFpRec(this)">👍 Ja</button>
+        <button class="fp-pill" data-r="Geht so" onclick="toggleFpRec(this)">🤷 Geht so</button>
+        <button class="fp-pill" data-r="Nein" onclick="toggleFpRec(this)">👎 Nein</button>
+      </div>
+    </div>
+    <div>
+      <div class="fp-group-title">💰 Preisklasse</div>
+      <div class="fp-pills" id="fp-prices">
+        <button class="fp-pill" data-p="€" onclick="toggleFpPrice(this)">€</button>
+        <button class="fp-pill" data-p="€€" onclick="toggleFpPrice(this)">€€</button>
+        <button class="fp-pill" data-p="€€€" onclick="toggleFpPrice(this)">€€€</button>
+      </div>
+    </div>
+    <div>
+      <div class="fp-group-title">⭐ Gesamtnote min.</div>
+      <div class="fp-range">
+        <input class="slider" type="range" id="fp-score-min" min="1" max="10" step="0.5" value="1" oninput="document.getElementById('fp-score-val').textContent=this.value;render()">
+        <label id="fp-score-val">1</label>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="resetFilter()">Zurücksetzen</button>
+    <button class="btn btn-primary" onclick="closeOverlay('filterOverlay')">Anwenden</button>
+  </div>
+</div>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-const CAT_ICONS = {
-  'Restaurant':'🍽','Bar':'🍹','Club':'🎵','Cafe':'☕','Hotel':'🏨','Geschäft':'🛍','Kultur':'🎨'
-};
+/* ══════════════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════════════ */
+const CAT_ICONS={Restaurant:'🍽',Bar:'🍹',Club:'🎵',Cafe:'☕',Hotel:'🏨',Geschäft:'🛍',Kultur:'🎨'};
+let CATS=['Restaurant','Bar','Club','Cafe','Hotel','Geschäft','Kultur'];
 
-let data = [
-  {id:1,date:'2023-01-05',city:'Wien',cat:'Cafe',name:'Zum schwarzen Kamel',dish:'Weißwein',score:null,rec:'Ja',price:'€€',notes:'Ca. 15 Minuten warten. Kellner freundlich aber kühl. Wein super. Atmosphäre locker.',maps:'https://goo.gl/maps/NBvd4oheCyHpEPsb7',fav:false},
-  {id:2,date:'2023-01-05',city:'Wien',cat:'Geschäft',name:'Wein & CO Stephansplatz',dish:'Weinhandlung',score:null,rec:'Ja',price:'€€ - €€€',notes:'Top Beratung. Viel Auswahl.',maps:'https://goo.gl/maps/xUEwCbjAMyYzx8MbA',fav:false},
-  {id:3,date:'2023-01-05',city:'Wien',cat:'Restaurant',name:'Zum Goldenen Würstel',dish:'Käsekrainer in Baguette',score:6.8,rec:'Ja',price:'€',notes:'Sehr lecker. Wird satt. Preislich günstig.',maps:'https://goo.gl/maps/XTZqteaMTCHhypaV6',fav:false},
-  {id:4,date:'2023-01-05',city:'Wien',cat:'Bar',name:'Billabong Australian Pub',dish:'Club Sandwich + Aperol',score:6.5,rec:'Ja',price:'€ - €€',notes:'Entspannte Atmosphäre zum Sport schauen. Freundliche Mitarbeiter. Sandwich und Aperol war lecker.',maps:'https://goo.gl/maps/QF8A9Azm7kZdYNUL7',fav:false},
-  {id:5,date:'2023-01-06',city:'Wien',cat:'Kultur',name:'Albertina Museum',dish:'Basquiat Ausstellung',score:null,rec:'Ja',price:'€€',notes:'Sehr voll da Feiertag. Auch relativ warm. Ausstellung sehr interessant.',maps:'https://goo.gl/maps/mbMhf2TDmGBe8MZd8',fav:false},
-  {id:6,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Figlmüller Bäckerstraße',dish:'Schnitzel vom Schwein + Pommes',score:9.6,rec:'Ja',price:'€€',notes:'Das bisher beste Schnitzel überhaupt. Unheimlich gut. Nur mit etwas Zitrone genießen. Reservieren! Ca. 20 Min. anstehen.',maps:'https://goo.gl/maps/UrNJm3QPJGxeufbH6',fav:true},
-  {id:7,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Gasthaus Pöschl',dish:'Grießnocherlsuppe, Leber, Rostbraten',score:8.1,rec:'Ja',price:'€€',notes:'Alles sehr üppig und lecker. Sehr entspannte Atmosphäre. Reservierung notwendig. Bedienung sehr nett.',maps:'https://goo.gl/maps/4M3FA9pX4dxSUroCA',fav:false},
-  {id:8,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleines Cafe',dish:'Cuba Libre + Kurze',score:null,rec:'Ja',price:'€ - €€',notes:'Super Atmosphäre, komplett locker. Super Mitarbeiter. Preislich etwas teuer.',maps:'https://goo.gl/maps/xwuGkX1GDGRkGk618',fav:false},
-  {id:9,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Loos American Bar',dish:'Cuba Libre',score:null,rec:'Ja',price:'€ - €€',notes:'Zentrale Lage, preislich teurer. Gute Drinks, stark gemixt.',maps:'https://goo.gl/maps/oW6y2s4fvPw5JyAD7',fav:false},
-  {id:10,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleinod',dish:'Champagner',score:null,rec:'Ja',price:'€€',notes:'War lecker. Bar sehr voll. Gäste trotz gehobenem Aussehen normal.',maps:'https://goo.gl/maps/5NvtfNXrqMgd77b36',fav:false},
-  {id:11,date:'2023-01-06',city:'Wien',cat:'Club',name:'SASS Music Club',dish:'Bacardi Boot',score:null,rec:'Geht so',price:'€€',notes:'Preislich relativ teuer. Gute Musik. Anfangs etwas leer. Kleiner Club.',maps:'https://goo.gl/maps/1nfyH2fNsnTmavms9',fav:false},
-  {id:12,date:'2023-01-05',city:'Wien',cat:'Hotel',name:'Zoku Vienna',dish:'Zimmer für 2 mit Balkon',score:null,rec:'Ja',price:'€€',notes:'Sehr schön, ziemlich neu. Freundliche Mitarbeiter. Parkplatz 25€/Tag. Schöne Dachterrasse. Lage etwas außerhalb.',maps:'https://goo.gl/maps/BjHeaVBYte7CDEhB6',fav:false},
-  {id:13,date:'2023-05-28',city:'München',cat:'Restaurant',name:'Nebenan Brunch & Bar',dish:'Nudeln mit Trüffelsauce',score:7.2,rec:'Ja',price:'€€',notes:'Super Besitzer und Angestellte. Sehr freundlich. Preislich top. Essen klasse. Extrawünsche möglich.',maps:'https://goo.gl/maps/ZUhmN1QRQVHMN8YD7',fav:false},
-  {id:14,date:'2023-05-28',city:'München',cat:'Club',name:'Lucky Who',dish:'Gin',score:null,rec:'Geht so',price:'€€',notes:'Outdoorclub. Getränke münchentypisch teuer. Stimmung gut. DJ + Live Act eher mies.',maps:'https://goo.gl/maps/Mrh5ywh4vSkm9zzAA',fav:false},
-  {id:15,date:'2023-05-29',city:'München',cat:'Restaurant',name:'Max Emanuel Brauerei',dish:'Schnitzel + Bratkartoffeln + Spezi',score:8.5,rec:'Ja',price:'€€',notes:'Sehr lecker. Schnitzel wirklich sehr gut, Bratkartoffeln erst recht. Preislich teuer aber idyllischer Biergarten mitten in der Stadt.',maps:'https://goo.gl/maps/RiyNDfeg811SCSmU9',fav:true},
-  {id:16,date:'2023-08-26',city:'Regensburg',cat:'Bar',name:'Palletti-Bar',dish:'–',score:null,rec:'Geht so',price:'€€',notes:'Kleine Bar mit wenigen Sitzplätzen. Kein Außenbereich ab 24 Uhr. Entspannte Atmosphäre. Nichts besonderes.',maps:'https://maps.app.goo.gl/JxBiGsr1Fk3w5Mja6',fav:false},
-  {id:17,date:'2023-08-27',city:'Regensburg',cat:'Bar',name:'da Silva Bar & Lounge',dish:'–',score:null,rec:'Nein',price:'',notes:'Viel zu heiß. Oben ok, unten viel zu warm und stickig. Direkt umgedreht.',maps:'https://maps.app.goo.gl/Yh5tN5uykdLVray18',fav:false},
-  {id:18,date:'2023-08-27',city:'Regensburg',cat:'Club',name:'0941 Bar',dish:'–',score:null,rec:'Ja',price:'',notes:'Sehr gute Stimmung und Musik. Nur kurz drin gewesen. Atmosphäre top. Kein Eintritt.',maps:'https://maps.app.goo.gl/cuWTX5DKdyCb9Zf9A',fav:false},
-  {id:19,date:'2023-08-26',city:'Regensburg',cat:'Restaurant',name:'Kneitinger Keller',dish:'Leberknödelsuppe',score:6.5,rec:'Ja',price:'€€',notes:'Essen in Ordnung. Biergarten und Location schön. Preislich ok, aber nicht günstig.',maps:'https://goo.gl/maps/qiAgiDUAZgf8LEnn6',fav:false},
-  {id:20,date:'2023-12-07',city:'Bärnau',cat:'Restaurant',name:'Gasthof zur Post',dish:'Leberknödelsuppe, Schnitzel, Apfelstrudel',score:7.6,rec:'Ja',price:'€€',notes:'Leberknödelsuppe etwas wässrig. Schnitzel sehr gut! Pommes top gewürzt. Apfelstrudel in Vanillesoße gut. Große Portionen.',maps:'https://maps.app.goo.gl/hD8ugjqDcnU3Rrpj7',fav:false}
+let DB=[
+  {id:1,date:'2023-01-05',city:'Wien',cat:'Cafe',name:'Zum schwarzen Kamel',dish:'Weißwein',sEssen:null,sAmb:null,sSvc:null,rec:'Ja',price:'€€',notes:'Ca. 15 Min. warten. Kellner freundlich aber kühl. Wein super. Atmosphäre locker.',maps:'https://goo.gl/maps/NBvd4oheCyHpEPsb7',fav:false,img:null},
+  {id:2,date:'2023-01-05',city:'Wien',cat:'Geschäft',name:'Wein & CO Stephansplatz',dish:'Weinhandlung',sEssen:null,sAmb:null,sSvc:null,rec:'Ja',price:'€€',notes:'Top Beratung. Viel Auswahl.',maps:'https://goo.gl/maps/xUEwCbjAMyYzx8MbA',fav:false,img:null},
+  {id:3,date:'2023-01-05',city:'Wien',cat:'Restaurant',name:'Zum Goldenen Würstel',dish:'Käsekrainer in Baguette',sEssen:6.8,sAmb:6,sSvc:6.5,rec:'Ja',price:'€',notes:'Sehr lecker. Günstig.',maps:'https://goo.gl/maps/XTZqteaMTCHhypaV6',fav:false,img:null},
+  {id:4,date:'2023-01-05',city:'Wien',cat:'Bar',name:'Billabong Australian Pub',dish:'Club Sandwich + Aperol',sEssen:6.5,sAmb:7,sSvc:7.5,rec:'Ja',price:'€',notes:'Entspannte Atmosphäre. Freundliche Mitarbeiter. Sandwich lecker.',maps:'https://goo.gl/maps/QF8A9Azm7kZdYNUL7',fav:false,img:null},
+  {id:5,date:'2023-01-06',city:'Wien',cat:'Kultur',name:'Albertina Museum',dish:'Basquiat Ausstellung',sEssen:null,sAmb:8,sSvc:7,rec:'Ja',price:'€€',notes:'Sehr voll da Feiertag. Ausstellung sehr interessant.',maps:'https://goo.gl/maps/mbMhf2TDmGBe8MZd8',fav:false,img:null},
+  {id:6,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Figlmüller Bäckerstraße',dish:'Schnitzel vom Schwein + Pommes',sEssen:9.6,sAmb:8,sSvc:8.5,rec:'Ja',price:'€€',notes:'Das bisher beste Schnitzel! Nur mit Zitrone genießen. Reservieren! Ca. 20 Min. Schlange.',maps:'https://goo.gl/maps/UrNJm3QPJGxeufbH6',fav:true,img:null},
+  {id:7,date:'2023-01-06',city:'Wien',cat:'Restaurant',name:'Gasthaus Pöschl',dish:'Grießnocherlsuppe, Leber, Rostbraten',sEssen:8.1,sAmb:7.5,sSvc:8,rec:'Ja',price:'€€',notes:'Üppig und lecker. Entspannte Atmosphäre. Reservierung notwendig.',maps:'https://goo.gl/maps/4M3FA9pX4dxSUroCA',fav:false,img:null},
+  {id:8,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleines Cafe',dish:'Cuba Libre + Kurze',sEssen:null,sAmb:8,sSvc:9,rec:'Ja',price:'€€',notes:'Super Atmosphäre. Mitarbeiter top.',maps:'https://goo.gl/maps/xwuGkX1GDGRkGk618',fav:false,img:null},
+  {id:9,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Loos American Bar',dish:'Cuba Libre',sEssen:null,sAmb:8.5,sSvc:7,rec:'Ja',price:'€€',notes:'Zentrale Lage. Gute Drinks, stark gemixt.',maps:'https://goo.gl/maps/oW6y2s4fvPw5JyAD7',fav:false,img:null},
+  {id:10,date:'2023-01-06',city:'Wien',cat:'Bar',name:'Kleinod',dish:'Champagner',sEssen:null,sAmb:7,sSvc:7,rec:'Ja',price:'€€',notes:'War lecker. Bar sehr voll.',maps:'https://goo.gl/maps/5NvtfNXrqMgd77b36',fav:false,img:null},
+  {id:11,date:'2023-01-06',city:'Wien',cat:'Club',name:'SASS Music Club',dish:'Bacardi Boot',sEssen:null,sAmb:6,sSvc:6,rec:'Geht so',price:'€€',notes:'Preislich teuer. Gute Musik. Kleiner Club.',maps:'https://goo.gl/maps/1nfyH2fNsnTmavms9',fav:false,img:null},
+  {id:12,date:'2023-01-05',city:'Wien',cat:'Hotel',name:'Zoku Vienna',dish:'Zimmer für 2 mit Balkon',sEssen:null,sAmb:9,sSvc:8.5,rec:'Ja',price:'€€',notes:'Sehr schön, neu. Freundlich. Parkplatz 25€/Tag. Schöne Dachterrasse. Etwas außerhalb.',maps:'https://goo.gl/maps/BjHeaVBYte7CDEhB6',fav:false,img:null},
+  {id:13,date:'2023-05-28',city:'München',cat:'Restaurant',name:'Nebenan Brunch & Bar',dish:'Nudeln mit Trüffelsauce',sEssen:7.2,sAmb:7.5,sSvc:8.5,rec:'Ja',price:'€€',notes:'Sehr freundlich. Preislich top. Extrawünsche möglich.',maps:'https://goo.gl/maps/ZUhmN1QRQVHMN8YD7',fav:false,img:null},
+  {id:14,date:'2023-05-28',city:'München',cat:'Club',name:'Lucky Who',dish:'Gin',sEssen:null,sAmb:6,sSvc:6,rec:'Geht so',price:'€€',notes:'Outdoor-Club. Teuer. DJ eher mies.',maps:'https://goo.gl/maps/Mrh5ywh4vSkm9zzAA',fav:false,img:null},
+  {id:15,date:'2023-05-29',city:'München',cat:'Restaurant',name:'Max Emanuel Brauerei',dish:'Schnitzel + Bratkartoffeln + Spezi',sEssen:8.5,sAmb:9,sSvc:7.5,rec:'Ja',price:'€€',notes:'Sehr lecker. Idyllischer Biergarten mitten in der Stadt. Teuer aber wert.',maps:'https://goo.gl/maps/RiyNDfeg811SCSmU9',fav:true,img:null},
+  {id:16,date:'2023-08-26',city:'Regensburg',cat:'Bar',name:'Palletti-Bar',dish:'–',sEssen:null,sAmb:6,sSvc:6,rec:'Geht so',price:'€€',notes:'Kleine Bar. Entspannte Atmosphäre. Nichts besonderes.',maps:'https://maps.app.goo.gl/JxBiGsr1Fk3w5Mja6',fav:false,img:null},
+  {id:17,date:'2023-08-27',city:'Regensburg',cat:'Bar',name:'da Silva Bar & Lounge',dish:'–',sEssen:null,sAmb:3,sSvc:4,rec:'Nein',price:'',notes:'Viel zu heiß. Direkt umgedreht.',maps:'https://maps.app.goo.gl/Yh5tN5uykdLVray18',fav:false,img:null},
+  {id:18,date:'2023-08-27',city:'Regensburg',cat:'Club',name:'0941 Bar',dish:'–',sEssen:null,sAmb:8,sSvc:7,rec:'Ja',price:'',notes:'Sehr gute Stimmung. Atmosphäre top.',maps:'https://maps.app.goo.gl/cuWTX5DKdyCb9Zf9A',fav:false,img:null},
+  {id:19,date:'2023-08-26',city:'Regensburg',cat:'Restaurant',name:'Kneitinger Keller',dish:'Leberknödelsuppe',sEssen:6.5,sAmb:7,sSvc:6.5,rec:'Ja',price:'€€',notes:'Essen ok. Biergarten schön.',maps:'https://goo.gl/maps/qiAgiDUAZgf8LEnn6',fav:false,img:null},
+  {id:20,date:'2023-12-07',city:'Bärnau',cat:'Restaurant',name:'Gasthof zur Post',dish:'Schnitzel, Leberknödelsuppe, Apfelstrudel',sEssen:7.6,sAmb:7,sSvc:8,rec:'Ja',price:'€€',notes:'Schnitzel sehr gut! Pommes top gewürzt. Große Portionen.',maps:'https://maps.app.goo.gl/hD8ugjqDcnU3Rrpj7',fav:false,img:null}
 ];
+let nextId=21;
 
-let nextId = 21;
-let activeCategory = 'all';
-let favOnly = false;
-let sortMode = 'date'; // date | score | name
-let currentTab = 'home';
-let selectedRec = 'Ja';
+/* ── State ── */
+let viewMode='list';
+let sortMode='date';
+let activeTab=0;
+let selectedRec='Ja';
+let filterCities=new Set();
+let filterCats=new Set();
+let filterRecs=new Set();
+let filterPrices=new Set();
+let filterScoreMin=1;
+let formImg=null; // base64
 
-// ── RENDER ──────────────────────────────────────────────────
-function getFiltered() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  return data.filter(e => {
-    if (activeCategory !== 'all' && e.cat !== activeCategory) return false;
-    if (favOnly && !e.fav) return false;
-    if (q && !`${e.name} ${e.city} ${e.dish} ${e.notes}`.toLowerCase().includes(q)) return false;
+/* ── Computed score ── */
+function getScore(e){
+  const vals=[e.sEssen,e.sAmb,e.sSvc].filter(v=>v!=null);
+  if(!vals.length) return null;
+  return parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1));
+}
+function scoreClass(s){
+  if(s==null) return 'sn';
+  if(s>=8) return 'sh';
+  if(s>=6) return 'sm';
+  return 'sl';
+}
+function recClass(r){return r==='Ja'?'ry':r==='Nein'?'rn':'rm'}
+function fmtDate(d){if(!d)return '';const[y,m,dd]=d.split('-');return `${dd}.${m}.${y}`}
+function catIcon(c){return CAT_ICONS[c]||'📍'}
+
+/* ── Cities dynamic ── */
+function allCities(){return[...new Set(DB.map(e=>e.city))].sort()}
+
+/* ── FILTER ── */
+function getFiltered(){
+  const q=document.getElementById('searchInp').value.toLowerCase();
+  return DB.filter(e=>{
+    if(activeTab===1 && !e.fav) return false;
+    if(filterCities.size && !filterCities.has(e.city)) return false;
+    if(filterCats.size && !filterCats.has(e.cat)) return false;
+    if(filterRecs.size && !filterRecs.has(e.rec)) return false;
+    if(filterPrices.size){
+      const p=e.price||'';
+      if(![...filterPrices].some(fp=>p.includes(fp))) return false;
+    }
+    const sc=getScore(e);
+    if(sc!=null && sc<filterScoreMin) return false;
+    if(q&&!`${e.name} ${e.city} ${e.dish} ${e.notes}`.toLowerCase().includes(q)) return false;
     return true;
   });
 }
-
-function getSorted(arr) {
-  if (sortMode === 'score') return [...arr].sort((a,b) => (b.score||0) - (a.score||0));
-  if (sortMode === 'name')  return [...arr].sort((a,b) => a.name.localeCompare(b.name));
-  return [...arr].sort((a,b) => new Date(b.date) - new Date(a.date));
+function getSorted(arr){
+  if(sortMode==='score') return[...arr].sort((a,b)=>(getScore(b)||0)-(getScore(a)||0));
+  if(sortMode==='name') return[...arr].sort((a,b)=>a.name.localeCompare(b.name,'de'));
+  return[...arr].sort((a,b)=>new Date(b.date)-new Date(a.date));
 }
 
-function scoreClass(s) {
-  if (!s) return 'score-none';
-  if (s >= 8) return 'score-high';
-  if (s >= 6) return 'score-mid';
-  return 'score-low';
-}
+/* ── RENDER ── */
+function render(){
+  if(activeTab===2){renderStats();return}
+  const filtered=getSorted(getFiltered());
+  renderStatChips(filtered);
+  renderCatBar();
 
-function recClass(r) {
-  if (r === 'Ja') return 'rec-yes';
-  if (r === 'Nein') return 'rec-no';
-  return 'rec-maybe';
-}
-
-function formatDate(d) {
-  if (!d) return '';
-  const [y,m,day] = d.split('-');
-  return `${day}.${m}.${y}`;
-}
-
-function renderStatsBar(filtered) {
-  const withScore = filtered.filter(e => e.score);
-  const avg = withScore.length ? (withScore.reduce((s,e)=>s+e.score,0)/withScore.length).toFixed(1) : '–';
-  const recs = filtered.filter(e => e.rec === 'Ja').length;
-  const favs = filtered.filter(e => e.fav).length;
-  const cities = [...new Set(filtered.map(e=>e.city))].length;
-
-  document.getElementById('statsBar').innerHTML = `
-    <div class="stat-chip"><div class="stat-val">${filtered.length}</div><div class="stat-label">Einträge</div></div>
-    <div class="stat-chip"><div class="stat-val">${avg}</div><div class="stat-label">Ø Wertung</div></div>
-    <div class="stat-chip"><div class="stat-val">${recs}</div><div class="stat-label">Empfehlungen</div></div>
-    <div class="stat-chip"><div class="stat-val">${cities}</div><div class="stat-label">Städte</div></div>
-    <div class="stat-chip"><div class="stat-val">${favs}</div><div class="stat-label">Favoriten</div></div>
-  `;
-}
-
-function render() {
-  const filtered = getSorted(getFiltered());
-  renderStatsBar(filtered);
-
-  const container = document.getElementById('cardsContainer');
-  if (!filtered.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽</div><div class="empty-text">Keine Einträge gefunden</div></div>`;
+  const mv=document.getElementById('mainView');
+  if(!filtered.length){
+    mv.innerHTML=`<div class="empty"><div class="empty-ico">🍽</div><div class="empty-t">Keine Einträge gefunden</div></div>`;
     return;
   }
 
-  // Group by city
-  const groups = {};
-  filtered.forEach(e => {
-    if (!groups[e.city]) groups[e.city] = [];
+  // group by city
+  const groups={};
+  filtered.forEach(e=>{
+    if(!groups[e.city]) groups[e.city]=[];
     groups[e.city].push(e);
   });
 
-  let html = '';
-  Object.entries(groups).forEach(([city, items]) => {
-    html += `<div class="city-divider"><span class="city-name">${city}</span><span class="city-count">${items.length}</span></div>`;
-    html += `<div class="cards-list">`;
-    items.forEach((e, i) => {
-      const sc = e.score ? e.score : '●';
-      const scClass = scoreClass(e.score);
-      html += `
-        <div class="card" onclick="openDetail(${e.id})" style="animation-delay:${i*0.04}s">
-          <div class="card-inner">
-            <div class="card-top">
-              <div class="card-left">
-                <div class="card-name">${e.name}</div>
-                <div class="card-meta">
-                  <span class="cat-icon">${CAT_ICONS[e.cat]||'📍'}</span>
-                  <span class="meta-tag">${e.cat}</span>
-                  ${e.date ? `<span class="meta-tag">${formatDate(e.date)}</span>` : ''}
-                </div>
-              </div>
-              <div class="card-score ${scClass}">${sc}</div>
-            </div>
-            ${e.dish && e.dish !== '–' ? `<div class="card-dish">🍴 ${e.dish}</div>` : ''}
-            <div class="card-bottom">
-              <span class="rec-badge ${recClass(e.rec)}">${e.rec === 'Ja' ? '👍 Empfohlen' : e.rec === 'Nein' ? '👎 Nicht empfohlen' : '🤷 Geht so'}</span>
-              <div class="card-right-meta">
-                ${e.price ? `<span class="price-tag">${e.price}</span>` : ''}
-                <button class="fav-btn" onclick="toggleFav(event,${e.id})">${e.fav ? '❤️' : '🤍'}</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
-    });
-    html += `</div>`;
-  });
-
-  container.innerHTML = html;
-}
-
-// ── DETAIL ──────────────────────────────────────────────────
-function openDetail(id) {
-  const e = data.find(x => x.id === id);
-  if (!e) return;
-  const scClass = scoreClass(e.score);
-  const content = document.getElementById('detailContent');
-  content.innerHTML = `
-    <div class="modal-handle"></div>
-    <div class="detail-score-row">
-      <div class="detail-score-circle ${scClass}">
-        ${e.score || '–'}
-        ${e.score ? '<div class="detail-score-label">/10</div>' : ''}
-      </div>
-      <div>
-        <div class="detail-name">${e.name}</div>
-        <div class="detail-city">📍 ${e.city}${e.date ? ' · ' + formatDate(e.date) : ''}</div>
-      </div>
-    </div>
-    <div class="detail-tags-row">
-      <span class="detail-tag">${CAT_ICONS[e.cat]||''} ${e.cat}</span>
-      ${e.price ? `<span class="detail-tag">${e.price}</span>` : ''}
-      <span class="rec-badge ${recClass(e.rec)}">${e.rec === 'Ja' ? '👍 Empfohlen' : e.rec === 'Nein' ? '👎 Nein' : '🤷 Geht so'}</span>
-    </div>
-    ${e.dish && e.dish !== '–' ? `<div class="detail-section"><div class="detail-section-title">Gericht</div><div class="detail-section-text">🍴 ${e.dish}</div></div>` : ''}
-    ${e.notes ? `<div class="detail-section"><div class="detail-section-title">Bewertung & Notizen</div><div class="detail-section-text">${e.notes}</div></div>` : ''}
-    <div style="display:flex;gap:10px;margin-top:4px;">
-      ${e.maps ? `<a class="maps-btn" href="${e.maps}" target="_blank">🗺 In Google Maps öffnen</a>` : ''}
-    </div>
-    <div style="display:flex;gap:10px;margin-top:10px;">
-      <button class="maps-btn" style="flex:1;border-color:var(--border);color:var(--text2);background:var(--bg3)" onclick="toggleFavDetail(${e.id})">${e.fav ? '❤️ Favorit entfernen' : '🤍 Als Favorit'}</button>
-      <button class="maps-btn" style="flex:1;border-color:var(--red);color:var(--red);background:var(--red-bg)" onclick="deleteEntry(${e.id})">🗑 Löschen</button>
-    </div>
-  `;
-  document.getElementById('detailModal').classList.add('open');
-}
-
-function toggleFavDetail(id) {
-  const e = data.find(x => x.id === id);
-  if (e) { e.fav = !e.fav; openDetail(id); render(); }
-}
-
-function deleteEntry(id) {
-  if (!confirm('Eintrag wirklich löschen?')) return;
-  data = data.filter(x => x.id !== id);
-  closeModal('detailModal');
-  render();
-  toast('Eintrag gelöscht');
-}
-
-// ── FAVORITES ──────────────────────────────────────────────
-function toggleFav(ev, id) {
-  ev.stopPropagation();
-  const e = data.find(x => x.id === id);
-  if (e) { e.fav = !e.fav; render(); toast(e.fav ? '❤️ Favorit gespeichert' : 'Favorit entfernt'); }
-}
-
-// ── ADD ENTRY ──────────────────────────────────────────────
-function openAddModal() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('inp-date').value = today;
-  document.getElementById('inp-city').value = '';
-  document.getElementById('inp-name').value = '';
-  document.getElementById('inp-dish').value = '';
-  document.getElementById('inp-notes').value = '';
-  document.getElementById('inp-maps').value = '';
-  document.getElementById('inp-score').value = 5;
-  document.getElementById('scoreCircle').textContent = '5';
-  selectedRec = 'Ja';
-  document.querySelectorAll('.rec-option').forEach(b => {
-    b.className = 'rec-option' + (b.dataset.rec === 'Ja' ? ' sel-yes' : '');
-  });
-  document.getElementById('addModal').classList.add('open');
-}
-
-function setRec(btn, val) {
-  selectedRec = val;
-  document.querySelectorAll('.rec-option').forEach(b => {
-    b.className = 'rec-option';
-    if (b.dataset.rec === val) {
-      b.className += val === 'Ja' ? ' sel-yes' : val === 'Geht so' ? ' sel-maybe' : ' sel-no';
+  let html='';
+  Object.entries(groups).forEach(([city,items])=>{
+    html+=`<div class="city-hdr"><span class="city-name">${city}</span><span class="city-cnt">${items.length}</span></div>`;
+    if(viewMode==='grid'){
+      html+=`<div class="grid-wrap">`;
+      items.forEach((e,i)=>{html+=renderGridCard(e,i)});
+      html+=`</div>`;
+    } else {
+      html+=`<div class="list-wrap">`;
+      items.forEach((e,i)=>{html+=renderListCard(e,i)});
+      html+=`</div>`;
     }
   });
+  mv.innerHTML=html;
 }
 
-function saveEntry() {
-  const name = document.getElementById('inp-name').value.trim();
-  const city = document.getElementById('inp-city').value.trim();
-  if (!name || !city) { toast('❗ Name und Stadt pflicht'); return; }
-
-  const scoreRaw = parseFloat(document.getElementById('inp-score').value);
-  data.unshift({
-    id: nextId++,
-    date: document.getElementById('inp-date').value,
-    city,
-    cat: document.getElementById('inp-cat').value,
-    name,
-    dish: document.getElementById('inp-dish').value,
-    score: scoreRaw,
-    rec: selectedRec,
-    price: document.getElementById('inp-price').value,
-    notes: document.getElementById('inp-notes').value,
-    maps: document.getElementById('inp-maps').value,
-    fav: false
-  });
-
-  closeModal('addModal');
-  render();
-  toast('✅ Eintrag gespeichert!');
+function renderListCard(e,i){
+  const sc=getScore(e);
+  const scDisp=sc!=null?sc:'●';
+  const scCls=scoreClass(sc);
+  const imgHtml=e.img?`<img class="card-img-strip" src="${e.img}">`:'' ;
+  const subHtml=e.sEssen!=null?`<div class="sub-scores">
+    <div class="sub-s"><div class="sub-s-val">${e.sEssen}</div><div class="sub-s-lbl">Essen</div></div>
+    <div class="sub-s"><div class="sub-s-val">${e.sAmb??'–'}</div><div class="sub-s-lbl">Ambien.</div></div>
+    <div class="sub-s"><div class="sub-s-val">${e.sSvc??'–'}</div><div class="sub-s-lbl">Service</div></div>
+  </div>`:'' ;
+  return`<div class="entry-card" onclick="openDetail(${e.id})" style="animation-delay:${i*.04}s">
+    ${imgHtml}
+    <div class="card-inner">
+      <div class="card-top-row">
+        <div class="card-name">${e.name}</div>
+        <div class="score-bubble ${scCls}">${scDisp}${sc!=null?'<span class="sub-lbl">/10</span>':''}</div>
+      </div>
+      <div class="card-meta-row">
+        <span class="tag city">📍 ${e.city}</span>
+        <span class="tag">${catIcon(e.cat)} ${e.cat}</span>
+        ${e.date?`<span class="tag">${fmtDate(e.date)}</span>`:''}
+      </div>
+      ${e.dish&&e.dish!=='–'?`<div class="card-dish">🍴 ${e.dish}</div>`:''}
+      <div class="card-bottom">
+        <span class="rec-badge ${recClass(e.rec)}">${e.rec==='Ja'?'👍 Empfohlen':e.rec==='Nein'?'👎 Nicht empfohlen':'🤷 Geht so'}</span>
+        <div class="card-right">
+          ${e.price?`<span class="price-tag">${e.price}</span>`:''}
+          <button class="fav-btn" onclick="toggleFav(event,${e.id})">${e.fav?'❤️':'🤍'}</button>
+        </div>
+      </div>
+      ${subHtml}
+    </div>
+  </div>`;
 }
 
-// Score slider live
-document.getElementById('inp-score').addEventListener('input', function() {
-  document.getElementById('scoreCircle').textContent = this.value;
-});
-
-// ── FILTERS ────────────────────────────────────────────────
-document.getElementById('categoryFilter').addEventListener('click', e => {
-  const pill = e.target.closest('.pill');
-  if (!pill) return;
-  document.querySelectorAll('#categoryFilter .pill').forEach(p => p.classList.remove('active'));
-  pill.classList.add('active');
-  activeCategory = pill.dataset.val;
-  render();
-});
-
-document.getElementById('searchInput').addEventListener('input', render);
-
-document.getElementById('favFilterBtn').addEventListener('click', function() {
-  favOnly = !favOnly;
-  this.textContent = favOnly ? '❤️' : '🤍';
-  render();
-});
-
-document.getElementById('sortBtn').addEventListener('click', function() {
-  const modes = ['date','score','name'];
-  const icons = ['⇅','⬆','🔤'];
-  sortMode = modes[(modes.indexOf(sortMode)+1) % modes.length];
-  this.textContent = icons[modes.indexOf(sortMode)];
-  toast('Sortierung: ' + ['Datum','Bewertung','Name'][modes.indexOf(sortMode)]);
-  render();
-});
-
-// ── TABS ───────────────────────────────────────────────────
-function switchTab(tab) {
-  currentTab = tab;
-  ['navHome','navFavs','navStats','navMap'].forEach(id => document.getElementById(id).classList.remove('active'));
-  const mainView = document.getElementById('mainView');
-  const statsView = document.getElementById('statsView');
-  const filterSection = document.querySelector('.filter-section');
-
-  if (tab === 'home') {
-    document.getElementById('navHome').classList.add('active');
-    mainView.classList.remove('hidden');
-    statsView.classList.remove('active');
-    filterSection.style.display = '';
-    favOnly = false;
-    document.getElementById('favFilterBtn').textContent = '🤍';
-    render();
-  } else if (tab === 'favs') {
-    document.getElementById('navFavs').classList.add('active');
-    mainView.classList.remove('hidden');
-    statsView.classList.remove('active');
-    filterSection.style.display = '';
-    favOnly = true;
-    document.getElementById('favFilterBtn').textContent = '❤️';
-    render();
-  } else if (tab === 'stats') {
-    document.getElementById('navStats').classList.add('active');
-    mainView.classList.add('hidden');
-    statsView.classList.add('active');
-    filterSection.style.display = 'none';
-    renderStats();
-  }
+function renderGridCard(e,i){
+  const sc=getScore(e);
+  const scCls=scoreClass(sc);
+  const catIco=catIcon(e.cat);
+  return`<div class="grid-card" onclick="openDetail(${e.id})" style="animation-delay:${i*.05}s">
+    ${e.img?`<img class="grid-img" src="${e.img}" style="font-size:0">`:`<div class="grid-img">${catIco}</div>`}
+    <div class="grid-body">
+      <div class="grid-name">${e.name}</div>
+      <div class="grid-row">
+        <span class="grid-city">📍 ${e.city}</span>
+        <span class="grid-score ${scCls}">${sc!=null?sc:'–'}</span>
+      </div>
+      <div class="grid-row">
+        <span class="rec-badge grid-rec ${recClass(e.rec)}">${e.rec==='Ja'?'👍':e.rec==='Nein'?'👎':'🤷'} ${e.rec}</span>
+        <span class="grid-fav">${e.fav?'❤️':'🤍'}</span>
+      </div>
+    </div>
+  </div>`;
 }
 
-function renderStats() {
-  const sv = document.getElementById('statsView');
-  const withScore = data.filter(e => e.score);
-  const avg = withScore.length ? (withScore.reduce((s,e)=>s+e.score,0)/withScore.length).toFixed(1) : '–';
+/* ── STAT CHIPS ── */
+function renderStatChips(filtered){
+  const withSc=filtered.filter(e=>getScore(e)!=null);
+  const avg=withSc.length?(withSc.reduce((s,e)=>s+getScore(e),0)/withSc.length).toFixed(1):'–';
+  const recs=filtered.filter(e=>e.rec==='Ja').length;
+  const favs=DB.filter(e=>e.fav).length;
+  const cities=[...new Set(DB.map(e=>e.city))];
 
-  // Top rated
-  const top = [...withScore].sort((a,b)=>b.score-a.score).slice(0,5);
-
-  // By city
-  const cityMap = {};
-  data.forEach(e => { cityMap[e.city] = (cityMap[e.city]||0)+1; });
-  const cities = Object.entries(cityMap).sort((a,b)=>b[1]-a[1]);
-  const maxCity = cities[0]?.[1] || 1;
-
-  // By cat
-  const catMap = {};
-  data.forEach(e => { catMap[e.cat] = (catMap[e.cat]||0)+1; });
-  const cats = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
-  const maxCat = cats[0]?.[1] || 1;
-
-  sv.innerHTML = `
-    <div style="padding:16px 0 8px;font-size:22px;font-weight:800;">📊 Statistik</div>
-    <div class="stats-card">
-      <div class="stats-card-title">🏆 Top Bewertungen</div>
-      ${top.map((e,i)=>`
-        <div class="top-item" onclick="openDetail(${e.id})">
-          <div class="top-rank">${i+1}</div>
-          <div class="top-info">
-            <div class="top-name">${e.name}</div>
-            <div class="top-sub">${e.city} · ${e.cat}</div>
-          </div>
-          <div class="top-score">${e.score}</div>
-        </div>`).join('')}
-    </div>
-    <div class="stats-card">
-      <div class="stats-card-title">📍 Einträge nach Stadt</div>
-      ${cities.map(([city,count])=>`
-        <div class="bar-item">
-          <div class="bar-label">${city}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${(count/maxCity*100).toFixed(0)}%"></div></div>
-          <div class="bar-count">${count}</div>
-        </div>`).join('')}
-    </div>
-    <div class="stats-card">
-      <div class="stats-card-title">🗂 Einträge nach Kategorie</div>
-      ${cats.map(([cat,count])=>`
-        <div class="bar-item">
-          <div class="bar-label">${CAT_ICONS[cat]||''} ${cat}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${(count/maxCat*100).toFixed(0)}%"></div></div>
-          <div class="bar-count">${count}</div>
-        </div>`).join('')}
-    </div>
-    <div class="stats-card" style="display:flex;gap:20px;justify-content:space-around;text-align:center;">
-      <div><div class="stat-val">${data.length}</div><div class="stat-label">Gesamt</div></div>
-      <div><div class="stat-val">${avg}</div><div class="stat-label">Ø Wertung</div></div>
-      <div><div class="stat-val">${data.filter(e=>e.fav).length}</div><div class="stat-label">Favoriten</div></div>
-      <div><div class="stat-val">${data.filter(e=>e.rec==='Ja').length}</div><div class="stat-label">Empfohlen</div></div>
-    </div>
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-chip ${filterScoreMin>1?'on':''}" onclick="document.getElementById('fp-score-min').value=1;filterScoreMin=1;document.getElementById('fp-score-val').textContent=1;render()" title="Alle Bewertungen">
+      <div class="stat-v">${filtered.length}</div><div class="stat-l">Einträge</div></div>
+    <div class="stat-chip" onclick="statsChipAvg()">
+      <div class="stat-v">${avg}</div><div class="stat-l">Ø Note</div></div>
+    <div class="stat-chip ${[...filterRecs].includes('Ja')?'on':''}" onclick="statsChipRec()" title="Empfehlungen filtern">
+      <div class="stat-v">${recs}</div><div class="stat-l">Empfohlen</div></div>
+    <div class="stat-chip ${activeTab===1?'on':''}" onclick="switchTab(1)" title="Favoriten">
+      <div class="stat-v">${favs}</div><div class="stat-l">Favoriten</div></div>
+    <div class="stat-chip" onclick="statsChipCities(${cities.length})" title="Städte">
+      <div class="stat-v">${cities.length}</div><div class="stat-l">Städte</div></div>
   `;
 }
 
-// ── EXPORT ─────────────────────────────────────────────────
-function exportData() {
-  const headers = ['Datum','Stadt','Kategorie','Name','Gericht','Bewertung','Empfehlung','Preis','Notizen','Maps'];
-  const rows = data.map(e => [
-    e.date, e.city, e.cat, e.name, e.dish, e.score||'', e.rec, e.price, e.notes.replace(/\n/g,' '), e.maps
-  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(';'));
-  const csv = [headers.join(';'), ...rows].join('\n');
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'Tastemap_Export.csv';
-  a.click();
+function statsChipAvg(){
+  filterScoreMin=7;
+  document.getElementById('fp-score-min').value=7;
+  document.getElementById('fp-score-val').textContent='7';
+  render();
+  toast('Zeige Einträge ≥ 7.0');
+}
+function statsChipRec(){
+  if(filterRecs.has('Ja')){filterRecs.clear();}else{filterRecs.clear();filterRecs.add('Ja');}
+  render();
+}
+function statsChipCities(n){
+  openFilter();
+}
+
+/* ── CAT FILTER BAR ── */
+function renderCatBar(){
+  const el=document.getElementById('catFilter');
+  const cats=['Alle',...CATS];
+  el.innerHTML=cats.map(c=>`<button class="pill ${filterCats.size===0&&c==='Alle'?'on':filterCats.has(c)?'on':''}" onclick="toggleCatBar('${c}')">${c==='Alle'?'Alle':catIcon(c)+' '+c}</button>`).join('');
+}
+
+function toggleCatBar(c){
+  if(c==='Alle'){filterCats.clear();}
+  else{
+    if(filterCats.has(c)) filterCats.delete(c);
+    else filterCats.add(c);
+  }
+  render();
+}
+
+/* ── DETAIL ── */
+function openDetail(id){
+  const e=DB.find(x=>x.id===id);if(!e)return;
+  const sc=getScore(e);
+  const scCls=scoreClass(sc);
+  let html=``;
+  if(e.img) html+=`<img class="detail-hero" src="${e.img}">`;
+  else html+=`<div class="detail-hero-placeholder">${catIcon(e.cat)}</div>`;
+  html+=`<div class="sheet-handle"></div>
+  <div class="detail-score-row">
+    <div class="detail-big-score ${scCls}">${sc??'–'}${sc!=null?'<span class="dbl">/10</span>':''}</div>
+    <div>
+      <div class="detail-title">${e.name}</div>
+      <div class="detail-city-row">📍 ${e.city}${e.date?' · '+fmtDate(e.date):''}</div>
+    </div>
+  </div>
+  <div class="detail-tags">
+    <span class="detail-tag">${catIcon(e.cat)} ${e.cat}</span>
+    ${e.price?`<span class="detail-tag">${e.price}</span>`:''}
+    <span class="rec-badge ${recClass(e.rec)}">${e.rec==='Ja'?'👍 Empfohlen':e.rec==='Nein'?'👎 Nicht empfohlen':'🤷 Geht so'}</span>
+  </div>`;
+
+  if(e.sEssen!=null||e.sAmb!=null||e.sSvc!=null){
+    html+=`<div class="detail-section">
+      <div class="detail-section-title">Einzelbewertungen</div>
+      <div class="sub-score-row">
+        ${e.sEssen!=null?`<div class="sub-score-item"><div class="sub-score-val">${e.sEssen}</div><div class="sub-score-lbl">🍽 Essen</div></div>`:''}
+        ${e.sAmb!=null?`<div class="sub-score-item"><div class="sub-score-val">${e.sAmb}</div><div class="sub-score-lbl">✨ Ambiente</div></div>`:''}
+        ${e.sSvc!=null?`<div class="sub-score-item"><div class="sub-score-val">${e.sSvc}</div><div class="sub-score-lbl">🤝 Service</div></div>`:''}
+      </div>
+    </div>`;
+  }
+  if(e.dish&&e.dish!=='–') html+=`<div class="detail-section"><div class="detail-section-title">Gericht</div><div class="detail-section-text">🍴 ${e.dish}</div></div>`;
+  if(e.notes) html+=`<div class="detail-section"><div class="detail-section-title">Notizen</div><div class="detail-section-text">${e.notes}</div></div>`;
+
+  html+=`<div class="detail-action-row">
+    ${e.maps?`<a class="detail-btn accent" href="${e.maps}" target="_blank">🗺 Maps</a>`:''}
+    <button class="detail-btn" onclick="toggleFavDetail(${e.id})">${e.fav?'❤️ Entfernen':'🤍 Favorit'}</button>
+    <button class="detail-btn" onclick="closeOverlay('detailOverlay');openForm(${e.id})">✏️ Bearbeiten</button>
+    <button class="detail-btn danger" onclick="deleteEntry(${e.id})">🗑</button>
+  </div>`;
+
+  document.getElementById('detailSheet').innerHTML=html;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function toggleFavDetail(id){
+  const e=DB.find(x=>x.id===id);if(!e)return;
+  e.fav=!e.fav;openDetail(id);render();
+}
+
+function deleteEntry(id){
+  if(!confirm('Eintrag wirklich löschen?'))return;
+  DB=DB.filter(x=>x.id!==id);
+  closeOverlay('detailOverlay');render();toast('Eintrag gelöscht');
+}
+
+/* ── FORM ── */
+function openForm(id){
+  const today=new Date().toISOString().split('T')[0];
+  formImg=null;
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('imgRemove').style.display='none';
+  document.getElementById('imgPreview').src='';
+
+  updateCityDatalist();
+
+  if(id===null){
+    // new
+    document.getElementById('formTitle').textContent='✦ Neuer Eintrag';
+    document.getElementById('editId').value='';
+    document.getElementById('f-city').value='';
+    document.getElementById('f-date').value=today;
+    document.getElementById('f-name').value='';
+    document.getElementById('f-cat').value='Restaurant';
+    document.getElementById('f-price').value='€€';
+    document.getElementById('f-dish').value='';
+    document.getElementById('f-notes').value='';
+    document.getElementById('f-maps').value='';
+    document.getElementById('f-s-essen').value=5;
+    document.getElementById('f-s-amb').value=5;
+    document.getElementById('f-s-svc').value=5;
+    selectedRec='Ja';
+  } else {
+    const e=DB.find(x=>x.id===id);if(!e)return;
+    document.getElementById('formTitle').textContent='✏️ Bearbeiten';
+    document.getElementById('editId').value=id;
+    document.getElementById('f-city').value=e.city;
+    document.getElementById('f-date').value=e.date||today;
+    document.getElementById('f-name').value=e.name;
+    document.getElementById('f-cat').value=e.cat;
+    document.getElementById('f-price').value=e.price||'€€';
+    document.getElementById('f-dish').value=e.dish||'';
+    document.getElementById('f-notes').value=e.notes||'';
+    document.getElementById('f-maps').value=e.maps||'';
+    document.getElementById('f-s-essen').value=e.sEssen??5;
+    document.getElementById('f-s-amb').value=e.sAmb??5;
+    document.getElementById('f-s-svc').value=e.sSvc??5;
+    selectedRec=e.rec||'Ja';
+    if(e.img){formImg=e.img;document.getElementById('imgPreview').src=e.img;document.getElementById('imgPreview').style.display='block';document.getElementById('imgRemove').style.display='flex';}
+  }
+  updateScores();
+  setRec(document.querySelector(`.rec-opt[data-r="${selectedRec}"]`),selectedRec);
+  document.getElementById('formOverlay').classList.add('open');
+}
+
+function updateCityDatalist(){
+  const dl=document.getElementById('cityList');
+  dl.innerHTML=allCities().map(c=>`<option value="${c}">`).join('');
+}
+
+function updateScores(){
+  const a=parseFloat(document.getElementById('f-s-essen').value);
+  const b=parseFloat(document.getElementById('f-s-amb').value);
+  const c=parseFloat(document.getElementById('f-s-svc').value);
+  document.getElementById('sv-essen').textContent=a;
+  document.getElementById('sv-amb').textContent=b;
+  document.getElementById('sv-svc').textContent=c;
+  const avg=((a+b+c)/3).toFixed(1);
+  document.getElementById('totalScoreNum').textContent=avg;
+}
+
+function setRec(btn,val){
+  selectedRec=val;
+  document.querySelectorAll('.rec-opt').forEach(b=>{
+    b.className='rec-opt';
+    if(b.dataset.r===val) b.className+=' sel-'+(val==='Ja'?'y':val==='Geht so'?'m':'n');
+  });
+}
+
+function handleImg(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    formImg=ev.target.result;
+    document.getElementById('imgPreview').src=formImg;
+    document.getElementById('imgPreview').style.display='block';
+    document.getElementById('imgRemove').style.display='flex';
+  };
+  r.readAsDataURL(f);
+}
+
+function removeImg(ev){
+  ev.stopPropagation();
+  formImg=null;
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('imgRemove').style.display='none';
+  document.getElementById('imgInp').value='';
+}
+
+function saveEntry(){
+  const name=document.getElementById('f-name').value.trim();
+  const city=document.getElementById('f-city').value.trim();
+  if(!name||!city){toast('❗ Name und Stadt sind pflicht');return;}
+
+  const obj={
+    id:0,
+    date:document.getElementById('f-date').value,
+    city,
+    cat:document.getElementById('f-cat').value,
+    name,
+    dish:document.getElementById('f-dish').value,
+    sEssen:parseFloat(document.getElementById('f-s-essen').value),
+    sAmb:parseFloat(document.getElementById('f-s-amb').value),
+    sSvc:parseFloat(document.getElementById('f-s-svc').value),
+    rec:selectedRec,
+    price:document.getElementById('f-price').value,
+    notes:document.getElementById('f-notes').value,
+    maps:document.getElementById('f-maps').value,
+    fav:false,
+    img:formImg
+  };
+
+  const eid=document.getElementById('editId').value;
+  if(eid){
+    const idx=DB.findIndex(x=>x.id===parseInt(eid));
+    if(idx>=0){obj.id=DB[idx].id;obj.fav=DB[idx].fav;DB[idx]=obj;}
+    toast('✅ Eintrag aktualisiert!');
+  } else {
+    obj.id=nextId++;
+    DB.unshift(obj);
+    toast('✅ Eintrag gespeichert!');
+  }
+
+  closeOverlay('formOverlay');
+  render();
+  updateFilterPanelCities();
+}
+
+/* ── FILTER PANEL ── */
+function openFilter(){
+  updateFilterPanelCities();
+  document.getElementById('filterOverlay').classList.add('open');
+}
+
+function updateFilterPanelCities(){
+  const cities=allCities();
+  document.getElementById('fp-cities').innerHTML=cities.map(c=>
+    `<button class="fp-pill ${filterCities.has(c)?'on':''}" onclick="toggleFpCity(this,'${c}')">${c}</button>`
+  ).join('');
+  document.getElementById('fp-cats').innerHTML=CATS.map(c=>
+    `<button class="fp-pill ${filterCats.has(c)?'on':''}" onclick="toggleFpCat(this,'${c}')">${catIcon(c)} ${c}</button>`
+  ).join('');
+  document.querySelectorAll('#fp-recs .fp-pill').forEach(b=>{
+    b.classList.toggle('on',filterRecs.has(b.dataset.r));
+  });
+  document.querySelectorAll('#fp-prices .fp-pill').forEach(b=>{
+    b.classList.toggle('on',filterPrices.has(b.dataset.p));
+  });
+}
+
+function toggleFpCity(btn,c){
+  if(filterCities.has(c)){filterCities.delete(c);btn.classList.remove('on');}
+  else{filterCities.add(c);btn.classList.add('on');}
+  renderCatBar();render();
+}
+function toggleFpCat(btn,c){
+  if(filterCats.has(c)){filterCats.delete(c);btn.classList.remove('on');}
+  else{filterCats.add(c);btn.classList.add('on');}
+  renderCatBar();render();
+}
+function toggleFpRec(btn){
+  const r=btn.dataset.r;
+  if(filterRecs.has(r)){filterRecs.delete(r);btn.classList.remove('on');}
+  else{filterRecs.add(r);btn.classList.add('on');}
+  render();
+}
+function toggleFpPrice(btn){
+  const p=btn.dataset.p;
+  if(filterPrices.has(p)){filterPrices.delete(p);btn.classList.remove('on');}
+  else{filterPrices.add(p);btn.classList.add('on');}
+  render();
+}
+function resetFilter(){
+  filterCities.clear();filterCats.clear();filterRecs.clear();filterPrices.clear();
+  filterScoreMin=1;
+  document.getElementById('fp-score-min').value=1;
+  document.getElementById('fp-score-val').textContent=1;
+  document.querySelectorAll('.fp-pill').forEach(b=>b.classList.remove('on'));
+  render();
+  toast('Filter zurückgesetzt');
+}
+
+/* fp score */
+document.getElementById('fp-score-min').addEventListener('input',function(){
+  filterScoreMin=parseFloat(this.value);render();
+});
+
+/* ── TABS ── */
+function switchTab(t){
+  activeTab=t;
+  [0,1,2,3].forEach(i=>{document.getElementById('nb'+i).classList.toggle('on',i===t)});
+  document.getElementById('mainView').style.display=t===2?'none':'block';
+  document.getElementById('statsView').style.display=t===2?'block':'none';
+  document.getElementById('statsRow').style.display=t===2?'none':'flex';
+  const filterSection=document.querySelector('.filter-bar').parentElement;
+  if(t===1){filterCats.clear();filterCities.clear();}
+  render();
+}
+
+/* ── SORT ── */
+const SORTS=['date','score','name'];
+const SORT_ICONS=['⇅','⬆','🔤'];
+function cycleSort(){
+  sortMode=SORTS[(SORTS.indexOf(sortMode)+1)%SORTS.length];
+  document.getElementById('btnSort').textContent=SORT_ICONS[SORTS.indexOf(sortMode)];
+  toast('Sortierung: '+['Datum','Bewertung','Name'][SORTS.indexOf(sortMode)]);
+  render();
+}
+
+/* ── VIEW ── */
+function setView(v){
+  viewMode=v;
+  document.getElementById('btnList').classList.toggle('on',v==='list');
+  document.getElementById('btnGrid').classList.toggle('on',v==='grid');
+  render();
+}
+
+/* ── FAV TOGGLE ── */
+function toggleFav(ev,id){
+  ev.stopPropagation();
+  const e=DB.find(x=>x.id===id);if(!e)return;
+  e.fav=!e.fav;render();toast(e.fav?'❤️ Favorit gespeichert':'Favorit entfernt');
+}
+
+/* ── STATS VIEW ── */
+function renderStats(){
+  const sv=document.getElementById('statsView');
+  const withSc=DB.filter(e=>getScore(e)!=null);
+  const avg=withSc.length?(withSc.reduce((s,e)=>s+getScore(e),0)/withSc.length).toFixed(1):'–';
+  const top=[...withSc].sort((a,b)=>getScore(b)-getScore(a)).slice(0,5);
+
+  const cityMap={};DB.forEach(e=>{cityMap[e.city]=(cityMap[e.city]||0)+1});
+  const cities=Object.entries(cityMap).sort((a,b)=>b[1]-a[1]);
+  const maxC=cities[0]?.[1]||1;
+
+  const catMap={};DB.forEach(e=>{catMap[e.cat]=(catMap[e.cat]||0)+1});
+  const cats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const maxCt=cats[0]?.[1]||1;
+
+  const avgEssen=DB.filter(e=>e.sEssen).length?(DB.filter(e=>e.sEssen).reduce((s,e)=>s+e.sEssen,0)/DB.filter(e=>e.sEssen).length).toFixed(1):'–';
+  const avgAmb=DB.filter(e=>e.sAmb).length?(DB.filter(e=>e.sAmb).reduce((s,e)=>s+e.sAmb,0)/DB.filter(e=>e.sAmb).length).toFixed(1):'–';
+  const avgSvc=DB.filter(e=>e.sSvc).length?(DB.filter(e=>e.sSvc).reduce((s,e)=>s+e.sSvc,0)/DB.filter(e=>e.sSvc).length).toFixed(1):'–';
+
+  sv.innerHTML=`<div class="stats-view-title">📊 Statistik</div>
+  <div class="stats-card">
+    <div class="scard-title">Übersicht</div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-v">${DB.length}</div><div class="kpi-l">Gesamt</div></div>
+      <div class="kpi"><div class="kpi-v">${avg}</div><div class="kpi-l">Ø Note</div></div>
+      <div class="kpi"><div class="kpi-v">${DB.filter(e=>e.fav).length}</div><div class="kpi-l">Favoriten</div></div>
+      <div class="kpi"><div class="kpi-v">${DB.filter(e=>e.rec==='Ja').length}</div><div class="kpi-l">Empfohlen</div></div>
+    </div>
+  </div>
+  <div class="stats-card">
+    <div class="scard-title">Ø Einzelbewertungen</div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-v">${avgEssen}</div><div class="kpi-l">🍽 Essen</div></div>
+      <div class="kpi"><div class="kpi-v">${avgAmb}</div><div class="kpi-l">✨ Ambiente</div></div>
+      <div class="kpi"><div class="kpi-v">${avgSvc}</div><div class="kpi-l">🤝 Service</div></div>
+    </div>
+  </div>
+  <div class="stats-card">
+    <div class="scard-title">🏆 Top Bewertungen</div>
+    ${top.map((e,i)=>`<div class="top-item" onclick="closeOverlay('x');openDetail(${e.id})">
+      <div class="top-rank">${i+1}</div>
+      <div class="top-info"><div class="top-name">${e.name}</div><div class="top-sub">${e.city} · ${e.cat}</div></div>
+      <div class="top-sc">${getScore(e)}</div>
+    </div>`).join('')}
+  </div>
+  <div class="stats-card">
+    <div class="scard-title">📍 Nach Stadt</div>
+    ${cities.map(([c,n])=>`<div class="bar-item"><div class="bar-lbl">${c}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/maxC*100).toFixed(0)}%"></div></div><div class="bar-cnt">${n}</div></div>`).join('')}
+  </div>
+  <div class="stats-card">
+    <div class="scard-title">🗂 Nach Kategorie</div>
+    ${cats.map(([c,n])=>`<div class="bar-item"><div class="bar-lbl">${catIcon(c)} ${c}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/maxCt*100).toFixed(0)}%"></div></div><div class="bar-cnt">${n}</div></div>`).join('')}
+  </div>`;
+}
+
+/* ── EXPORT ── */
+function exportCSV(){
+  const h=['Datum','Stadt','Kategorie','Name','Gericht','Essen','Ambiente','Service','Gesamt','Empfehlung','Preis','Notizen','Maps'];
+  const rows=DB.map(e=>[e.date,e.city,e.cat,e.name,e.dish,e.sEssen??'',e.sAmb??'',e.sSvc??'',getScore(e)??'',e.rec,e.price,e.notes?.replace(/\n/g,' '),e.maps].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(';'));
+  const blob=new Blob(['\uFEFF'+[h.join(';'),...rows].join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Tastemap.csv';a.click();
   toast('📤 CSV exportiert');
 }
 
-// ── MODALS ─────────────────────────────────────────────────
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+/* ── OVERLAY HELPERS ── */
+function closeOverlay(id){document.getElementById(id).classList.remove('open')}
+function overlayClose(ev,id){if(ev.target===document.getElementById(id))closeOverlay(id)}
+
+/* ── TOAST ── */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
 }
 
-document.getElementById('addModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('addModal')) closeModal('addModal');
-});
-
-document.getElementById('detailModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('detailModal')) closeModal('detailModal');
-});
-
-// ── TOAST ──────────────────────────────────────────────────
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// ── INIT ───────────────────────────────────────────────────
+/* ── INIT ── */
+renderCatBar();
 render();
 </script>
 </body>
