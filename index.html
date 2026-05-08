@@ -451,18 +451,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
     <button class="img-rm" id="imgRm" onclick="removeImg(event)">✕</button>
   </div>
 
-  <div class="frow">
-    <div class="fg">
-      <label class="fl">Stadt / Ort *</label>
-      <div style="position:relative">
-        <input class="fi" id="rf-city" placeholder="z.B. Würzburg" autocomplete="off"
-          oninput="geoSearch(this.value)" onblur="setTimeout(clearGeoSuggestions,200)">
-        <div id="geoDropdown" style="position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;z-index:10;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2)"></div>
-      </div>
-      <input type="hidden" id="rf-lat">
-      <input type="hidden" id="rf-lng">
+  <div class="fg">
+    <label class="fl">Stadt / Ort *</label>
+    <div style="position:relative">
+      <input class="fi" id="rf-city" placeholder="z.B. Regensburg" autocomplete="off"
+        oninput="geoSearch(this.value)" onblur="setTimeout(clearGeoSuggestions,200)">
+      <div id="geoDropdown" style="position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;z-index:20;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2)"></div>
     </div>
-    <div class="fg"><label class="fl">Datum</label><input class="fi" id="rf-date" type="date"></div>
+    <input type="hidden" id="rf-lat">
+    <input type="hidden" id="rf-lng">
+  </div>
+  <div class="fg">
+    <label class="fl">Land (optional)</label>
+    <input class="fi" id="rf-country" placeholder="z.B. Deutschland">
   </div>
   <div class="fg"><label class="fl">Name *</label><input class="fi" id="rf-name" placeholder="Restaurantname" oninput="checkDupe()"></div>
   <div id="dupeWarn" class="dupe-w" onclick="useDupe()"></div>
@@ -630,60 +631,109 @@ function recCls(r){return r==='Ja'?'ry':r==='Nein'?'rn':'rm'}
 function fmtD(d){if(!d)return'';const[y,m,dd]=d.split('-');return`${dd}.${m}.${y}`}
 function catIco(c){return CAT_ICONS[c]||'📍'}
 // Show only first part of city (before first comma) for card display
-function cityShort(city){return(city||'').split(',')[0].trim()}
+// Show only city name in cards (no country)
+function cityShort(r){return typeof r==='string'?r.split(',')[0].trim():(r.city||'').trim()}
+// Full label: "Regensburg, Deutschland"
+function cityFull(r){return[r.city,r.country].filter(Boolean).join(', ')}
 function allCities(){return[...new Set(DB.map(r=>r.city))].sort()}
 function allTags(){return[...new Set(DB.flatMap(r=>r.tags))].sort()}
 function allCuisinesUsed(){return[...new Set(DB.map(r=>r.cuisine).filter(Boolean))].sort()}
 function saveLS(){
   try{
-    // Separate images from main data to handle localStorage quota
+    // Step 1: Build image map FIRST, before touching localStorage
     const imgMap={};
     const dbClean=DB.map(r=>{
-      const rClean={...r};
-      // Restaurant image
-      if(r.img){imgMap[`r_${r.id}`]=r.img;rClean.img='__img__';}
-      // Visit images
+      const rClean={...r,visits:null};
+      if(r.img&&r.img.startsWith('data:')){
+        imgMap['r_'+r.id]=r.img;
+        rClean.img='__img__';
+      }
       rClean.visits=(r.visits||[]).map(v=>{
         const vClean={...v};
-        if(v.img){imgMap[`v_${v.id}`]=v.img;vClean.img='__img__';}
+        if(v.img&&v.img.startsWith('data:')){
+          imgMap['v_'+v.id]=v.img;
+          vClean.img='__img__';
+        }
         return vClean;
       });
       return rClean;
     });
+
+    // Step 2: Save main data
     localStorage.setItem('tm6',JSON.stringify({DB:dbClean,nRid,nVid,CUISINES}));
-    // Store images separately, one key per image
-    // Clear old img keys first
-    Object.keys(localStorage).filter(k=>k.startsWith('tm6_img_')).forEach(k=>localStorage.removeItem(k));
+
+    // Step 3: Remove ONLY img keys that are no longer needed
+    const newKeys=new Set(Object.keys(imgMap).map(k=>'tm6_img_'+k));
+    Object.keys(localStorage)
+      .filter(k=>k.startsWith('tm6_img_')&&!newKeys.has(k))
+      .forEach(k=>localStorage.removeItem(k));
+
+    // Step 4: Save each image individually — skip if too large but don't fail everything
     Object.entries(imgMap).forEach(([k,v])=>{
-      try{localStorage.setItem('tm6_img_'+k,v);}catch(e){/* image too large, skip */}
+      try{
+        localStorage.setItem('tm6_img_'+k,v);
+      }catch(imgErr){
+        // Image too large — compress further and retry
+        try{
+          const compressed=compressBase64(v,0.5,600);
+          localStorage.setItem('tm6_img_'+k,compressed);
+        }catch(e2){
+          // Still too large, skip this image silently
+          console.warn('Image too large to save:',k);
+        }
+      }
     });
   }catch(e){
-    // If still failing, try without images at all
-    try{
-      const dbNoImg=DB.map(r=>({...r,img:null,visits:(r.visits||[]).map(v=>({...v,img:null}))}));
-      localStorage.setItem('tm6',JSON.stringify({DB:dbNoImg,nRid,nVid,CUISINES}));
-      toast('⚠️ Bilder konnten nicht gespeichert werden (zu groß)');
-    }catch(e2){}
+    console.error('saveLS error:',e);
+    toast('⚠️ Speichern fehlgeschlagen');
   }
 }
+
 function loadLS(){
   try{
-    const d=JSON.parse(localStorage.getItem('tm6'));
-    if(d){
-      DB=d.DB.map(r=>{
-        const rr={...r};
-        if(r.img==='__img__')rr.img=localStorage.getItem('tm6_img_r_'+r.id)||null;
-        rr.visits=(r.visits||[]).map(v=>{
-          const vv={...v};
-          if(v.img==='__img__')vv.img=localStorage.getItem('tm6_img_v_'+v.id)||null;
-          return vv;
-        });
-        return rr;
+    const raw=localStorage.getItem('tm6');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    if(!d||!d.DB)return;
+    DB=d.DB.map(r=>{
+      const rr={...r};
+      // Restore restaurant image
+      if(r.img==='__img__'){
+        rr.img=localStorage.getItem('tm6_img_r_'+r.id)||null;
+      }
+      // Restore visit images
+      rr.visits=(r.visits||[]).map(v=>{
+        const vv={...v};
+        if(v.img==='__img__'){
+          vv.img=localStorage.getItem('tm6_img_v_'+v.id)||null;
+        }
+        return vv;
       });
-      nRid=d.nRid;nVid=d.nVid;
-      if(d.CUISINES)CUISINES=d.CUISINES;
-    }
-  }catch(e){}
+      return rr;
+    });
+    nRid=d.nRid||nRid;
+    nVid=d.nVid||nVid;
+    if(d.CUISINES&&Array.isArray(d.CUISINES))CUISINES=d.CUISINES;
+  }catch(e){
+    console.error('loadLS error:',e);
+  }
+}
+
+// Compress a base64 image to target quality and max dimension
+function compressBase64(dataUrl,quality,maxDim){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+      if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality));
+    };
+    img.src=dataUrl;
+  });
 }
 function togS(set,val,btn){if(set.has(val)){set.delete(val);btn?.classList.remove('on');}else{set.add(val);btn?.classList.add('on');}}
 
@@ -765,7 +815,7 @@ function listCard(r,i){
         <div class="score-bub ${scCls(lsc)}">${lsc??'●'}${lsc!=null?`<span class="sl">/10</span>`:''}</div>
       </div>
       <div class="ecard-row1">
-        <span class="tag city">📍 ${cityShort(r.city)}</span>
+        <span class="tag city">📍 ${cityShort(r)}</span>
         <span class="tag">${catIco(r.cat)} ${r.cat}</span>
         ${r.cuisine?`<span class="tag cuisine">${r.cuisine}</span>`:''}
       </div>
@@ -797,7 +847,7 @@ function gridCard(r,i){
     ${r.img?`<img class="gcard-img" src="${r.img}" style="font-size:0">`:`<div class="gcard-img">${catIco(r.cat)}</div>`}
     <div class="gcard-body">
       <div class="gcard-name">${r.name}</div>
-      <div class="gcard-row"><span class="gcard-city">📍 ${cityShort(r.city)}</span><span class="gcard-score ${scCls(lsc)}">${lsc??'–'}</span></div>
+      <div class="gcard-row"><span class="gcard-city">📍 ${cityShort(r)}</span><span class="gcard-score ${scCls(lsc)}">${lsc??'–'}</span></div>
       <div class="gcard-row">
         <span class="rec-b ${recCls(lv?.rec||'–')}" style="font-size:11px">${lv?.rec==='Ja'?'👍':lv?.rec==='Nein'?'👎':'🤷'} ${lv?.rec||'–'}</span>
         ${r.visits.length>1?`<span style="font-size:11px;color:var(--green)">🔄${r.visits.length}</span>`:''}
@@ -881,7 +931,7 @@ function openDetail(rid){
     <div class="dm-big ${scCls(lsc)}">${lsc??'–'}${lsc!=null?'<span class="dbl">/10</span>':''}</div>
     <div>
       <div class="dm-title">${r.name}</div>
-      <div class="dm-sub">📍 ${cityShort(r.city)}${r.price?' · '+r.price:''}${r.cuisine?' · '+r.cuisine:''}<br>${r.visits.length} Besuch${r.visits.length!==1?'e':''}</div>
+      <div class="dm-sub">📍 ${cityFull(r)}${r.price?' · '+r.price:''}${r.cuisine?' · '+r.cuisine:''}<br>${r.visits.length} Besuch${r.visits.length!==1?'e':''}</div>
     </div>
   </div>
   <div class="dm-tags">
@@ -1101,7 +1151,9 @@ function openRestForm(rid){
   if(!rid){
     document.getElementById('rfTitle').textContent='✦ Neuer Eintrag';
     document.getElementById('rf-id').value='';
-    document.getElementById('rf-city').value='';document.getElementById('rf-lat').value='';document.getElementById('rf-lng').value='';
+    document.getElementById('rf-city').value='';
+    document.getElementById('rf-country').value='';
+    document.getElementById('rf-lat').value='';document.getElementById('rf-lng').value='';
     document.getElementById('rf-date').value=today;
     document.getElementById('rf-name').value='';document.getElementById('rf-cat').value='Restaurant';
     document.getElementById('rf-price').value='€€';document.getElementById('rf-cuisine').value='';
@@ -1110,7 +1162,8 @@ function openRestForm(rid){
     const r=DB.find(x=>x.id===rid);if(!r)return;
     document.getElementById('rfTitle').textContent='✏️ Restaurant bearbeiten';
     document.getElementById('rf-id').value=rid;
-    document.getElementById('rf-city').value=r.city;
+    document.getElementById('rf-city').value=r.city||'';
+    document.getElementById('rf-country').value=r.country||'';
     document.getElementById('rf-lat').value=r.lat||'';document.getElementById('rf-lng').value=r.lng||'';
     document.getElementById('rf-date').value=today;
     document.getElementById('rf-name').value=r.name;document.getElementById('rf-cat').value=r.cat;
@@ -1134,28 +1187,29 @@ function saveRest(){
   const rid=document.getElementById('rf-id').value;
   const lat=parseFloat(document.getElementById('rf-lat').value)||null;
   const lng=parseFloat(document.getElementById('rf-lng').value)||null;
-  // Use new image if uploaded, otherwise keep original
-  const imgToSave = formImg !== null ? formImg : formOrigImg;
+  const country=document.getElementById('rf-country').value.trim();
+  const imgToSave=formImg!==null?formImg:formOrigImg;
   if(!rid){
-    const nr={id:nRid++,city,lat,lng,cat:document.getElementById('rf-cat').value,name,
-      cuisine:document.getElementById('rf-cuisine').value,price:document.getElementById('rf-price').value,
-      maps:document.getElementById('rf-maps').value,web:document.getElementById('rf-web').value,
+    const nr={id:nRid++,city,country,lat,lng,
+      cat:document.getElementById('rf-cat').value,name,
+      cuisine:document.getElementById('rf-cuisine').value,
+      price:document.getElementById('rf-price').value,
+      maps:document.getElementById('rf-maps').value,
+      web:document.getElementById('rf-web').value,
       img:imgToSave,tags:[...formTags],fav:false,visits:[]};
     DB.unshift(nr);closeOv('restFormOv');render();saveLS();
     toast('Restaurant gespeichert — jetzt ersten Besuch eintragen!');
     setTimeout(()=>openVisitForm(nr.id,null),350);
   } else {
     const r=DB.find(x=>x.id===parseInt(rid));if(!r)return;
-    // Preserve visits and fav — only update restaurant metadata
-    r.city=city;r.lat=lat;r.lng=lng;
+    r.city=city;r.country=country;r.lat=lat;r.lng=lng;
     r.name=name;r.cat=document.getElementById('rf-cat').value;
     r.cuisine=document.getElementById('rf-cuisine').value;
     r.price=document.getElementById('rf-price').value;
     r.maps=document.getElementById('rf-maps').value;
     r.web=document.getElementById('rf-web').value;
-    r.img=imgToSave;  // safe: keeps original if not changed
+    r.img=imgToSave;
     r.tags=[...formTags];
-    // r.fav and r.visits are NOT touched
     closeOv('restFormOv');render();saveLS();
     toast('✅ Restaurant aktualisiert!');
     openDetail(r.id);
@@ -1188,12 +1242,10 @@ async function geoSearch(q){
       dd.innerHTML=results.map((item)=>{
         const city=item.address?.city||item.address?.town||item.address?.village||item.address?.hamlet||item.name;
         const country=item.address?.country||'';
-        // Display in dropdown: City, State, Country (full for disambiguation)
         const state=item.address?.state||'';
+        // Dropdown shows full label for disambiguation
         const dropdownLabel=[city,state,country].filter(Boolean).join(', ');
-        // What gets STORED: City, Country only (no state)
-        const storedLabel=[city,country].filter(Boolean).join(', ');
-        return`<div onclick="selectGeo('${storedLabel.replace(/'/g,"\\'")}','${storedLabel.replace(/'/g,"\\'")}',${item.lat},${item.lon})"
+        return`<div onclick="selectGeo('${city.replace(/'/g,"\\'")}','${country.replace(/'/g,"\\'")}',${item.lat},${item.lon})"
           style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);transition:background .15s"
           onmouseenter="this.style.background='var(--bg3)'"
           onmouseleave="this.style.background=''">${dropdownLabel}</div>`;
@@ -1202,8 +1254,10 @@ async function geoSearch(q){
     }catch(e){dd.style.display='none';}
   },350);
 }
-function selectGeo(city,display,lat,lng){
-  document.getElementById('rf-city').value=display;
+function selectGeo(city,country,lat,lng){
+  // Fill city and country into separate fields
+  document.getElementById('rf-city').value=city;
+  document.getElementById('rf-country').value=country;
   document.getElementById('rf-lat').value=lat;
   document.getElementById('rf-lng').value=lng;
   document.getElementById('geoDropdown').style.display='none';
@@ -1326,7 +1380,7 @@ function renderTimeline(){
         <div class="tl-card">
           <div class="tl-date">${fmtD(v.date)||'?'} · <span style="color:var(--acc);font-weight:800">${s??'–'}/10</span></div>
           <div class="tl-name">${r.name}</div>
-          <div class="tl-meta">📍 ${r.city}${r.cuisine?' · '+r.cuisine:''}${v.dish&&v.dish!=='–'?' · 🍴'+v.dish:''}</div>
+          <div class="tl-meta">📍 ${cityFull(r)}${r.cuisine?' · '+r.cuisine:''}${v.dish&&v.dish!=='–'?' · 🍴'+v.dish:''}</div>
         </div>
       </div>`;
     });
@@ -1411,7 +1465,7 @@ function renderMap(){
       const m=L.marker(ll,{icon}).addTo(leafMap);
       m.on('click',()=>{closeOv('detailOv');openDetail(r.id);});
       const lv=rLV(r);
-      m.bindTooltip(`<b>${r.name}</b><br>📍 ${r.city}${lsc?' · ⭐'+lsc:''}${lv?.date?' · '+fmtD(lv.date):''}`,{direction:'top',offset:[0,-22],opacity:.95});
+      m.bindTooltip(`<b>${r.name}</b><br>📍 ${cityFull(r)}${lsc?' · ⭐'+lsc:''}${lv?.date?' · '+fmtD(lv.date):''}`,{direction:'top',offset:[0,-22],opacity:.95});
     });
     if(bounds.length===1)leafMap.setView(bounds[0],13);
     else try{leafMap.fitBounds(bounds,{padding:[50,50],maxZoom:14});}catch(e){}
