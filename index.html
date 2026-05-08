@@ -458,10 +458,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
   </div>
 
   <div class="frow">
-    <div class="fg"><label class="fl">Stadt *</label><input class="fi" id="rf-city" list="cityList" placeholder="z.B. Wien" oninput="checkDupe()"></div>
+    <div class="fg">
+      <label class="fl">Stadt / Ort *</label>
+      <div style="position:relative">
+        <input class="fi" id="rf-city" placeholder="z.B. Würzburg" autocomplete="off"
+          oninput="geoSearch(this.value)" onblur="setTimeout(clearGeoSuggestions,200)">
+        <div id="geoDropdown" style="position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;z-index:10;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2)"></div>
+      </div>
+      <input type="hidden" id="rf-lat">
+      <input type="hidden" id="rf-lng">
+    </div>
     <div class="fg"><label class="fl">Datum</label><input class="fi" id="rf-date" type="date"></div>
   </div>
-  <datalist id="cityList"></datalist>
   <div class="fg"><label class="fl">Name *</label><input class="fi" id="rf-name" placeholder="Restaurantname" oninput="checkDupe()"></div>
   <div id="dupeWarn" class="dupe-w" onclick="useDupe()"></div>
   <div class="frow">
@@ -554,6 +562,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
   <div class="btn-row"><button class="btn btn-p" onclick="closeOv('cuisineOv');populateCuisineSel()">Fertig</button></div>
 </div>
 </div>
+
+<!-- ═══ IMPORT PREVIEW MODAL z=600 ═══ -->
+<div class="ov" id="importPreviewOv" style="z-index:600" onclick="ovBg(event,'importPreviewOv')">
+  <div class="mbox" id="importPreviewBox"></div>
+</div>
+
+<!-- hidden file input for import -->
+<input type="file" id="importFileInp" accept=".json" style="display:none" onchange="handleImportFile(this)">
 
 <div class="toast" id="toast"></div>
 
@@ -998,20 +1014,24 @@ function renderDishList(){
 }
 
 /* ── RESTAURANT FORM ── */
+let formOrigImg=null; // keep original img when editing
+
 function openRestForm(rid){
   const today=new Date().toISOString().split('T')[0];
-  formImg=null;formTags=[];dupeRid=null;
+  formImg=null;formOrigImg=null;formTags=[];dupeRid=null;
   document.getElementById('imgPrev').style.display='none';
   document.getElementById('imgRm').style.display='none';
   document.getElementById('imgPrev').src='';
   document.getElementById('tagsW').querySelectorAll('.tchip').forEach(e=>e.remove());
   document.getElementById('tagsInp').value='';
   document.getElementById('dupeWarn').style.display='none';
+  clearGeoSuggestions();
   updateCityDL();populateCuisineSel();
   if(!rid){
     document.getElementById('rfTitle').textContent='✦ Neuer Eintrag';
     document.getElementById('rf-id').value='';
-    document.getElementById('rf-city').value='';document.getElementById('rf-date').value=today;
+    document.getElementById('rf-city').value='';document.getElementById('rf-lat').value='';document.getElementById('rf-lng').value='';
+    document.getElementById('rf-date').value=today;
     document.getElementById('rf-name').value='';document.getElementById('rf-cat').value='Restaurant';
     document.getElementById('rf-price').value='€€';document.getElementById('rf-cuisine').value='';
     document.getElementById('rf-web').value='';document.getElementById('rf-maps').value='';
@@ -1019,32 +1039,55 @@ function openRestForm(rid){
     const r=DB.find(x=>x.id===rid);if(!r)return;
     document.getElementById('rfTitle').textContent='✏️ Restaurant bearbeiten';
     document.getElementById('rf-id').value=rid;
-    document.getElementById('rf-city').value=r.city;document.getElementById('rf-date').value=today;
+    document.getElementById('rf-city').value=r.city;
+    document.getElementById('rf-lat').value=r.lat||'';document.getElementById('rf-lng').value=r.lng||'';
+    document.getElementById('rf-date').value=today;
     document.getElementById('rf-name').value=r.name;document.getElementById('rf-cat').value=r.cat;
     document.getElementById('rf-price').value=r.price||'€€';document.getElementById('rf-cuisine').value=r.cuisine||'';
     document.getElementById('rf-web').value=r.web||'';document.getElementById('rf-maps').value=r.maps||'';
     r.tags.forEach(t=>addTagChip(t));
-    if(r.img){formImg=r.img;document.getElementById('imgPrev').src=r.img;document.getElementById('imgPrev').style.display='block';document.getElementById('imgRm').style.display='flex';}
+    if(r.img){
+      formImg=r.img;formOrigImg=r.img;
+      document.getElementById('imgPrev').src=r.img;
+      document.getElementById('imgPrev').style.display='block';
+      document.getElementById('imgRm').style.display='flex';
+    }
   }
   document.getElementById('restFormOv').classList.add('open');
 }
+
 function saveRest(){
   const name=document.getElementById('rf-name').value.trim();
   const city=document.getElementById('rf-city').value.trim();
   if(!name||!city){toast('❗ Name und Stadt pflicht');return;}
   const rid=document.getElementById('rf-id').value;
+  const lat=parseFloat(document.getElementById('rf-lat').value)||null;
+  const lng=parseFloat(document.getElementById('rf-lng').value)||null;
+  // Use new image if uploaded, otherwise keep original
+  const imgToSave = formImg !== null ? formImg : formOrigImg;
   if(!rid){
-    const nr={id:nRid++,city,cat:document.getElementById('rf-cat').value,name,cuisine:document.getElementById('rf-cuisine').value,price:document.getElementById('rf-price').value,maps:document.getElementById('rf-maps').value,web:document.getElementById('rf-web').value,img:formImg,tags:[...formTags],fav:false,visits:[]};
+    const nr={id:nRid++,city,lat,lng,cat:document.getElementById('rf-cat').value,name,
+      cuisine:document.getElementById('rf-cuisine').value,price:document.getElementById('rf-price').value,
+      maps:document.getElementById('rf-maps').value,web:document.getElementById('rf-web').value,
+      img:imgToSave,tags:[...formTags],fav:false,visits:[]};
     DB.unshift(nr);closeOv('restFormOv');render();saveLS();
     toast('Restaurant gespeichert — jetzt ersten Besuch eintragen!');
     setTimeout(()=>openVisitForm(nr.id,null),350);
   } else {
     const r=DB.find(x=>x.id===parseInt(rid));if(!r)return;
-    r.city=city;r.name=name;r.cat=document.getElementById('rf-cat').value;
-    r.cuisine=document.getElementById('rf-cuisine').value;r.price=document.getElementById('rf-price').value;
-    r.maps=document.getElementById('rf-maps').value;r.web=document.getElementById('rf-web').value;
-    r.img=formImg;r.tags=[...formTags];
-    closeOv('restFormOv');render();saveLS();toast('✅ Restaurant aktualisiert!');
+    // Preserve visits and fav — only update restaurant metadata
+    r.city=city;r.lat=lat;r.lng=lng;
+    r.name=name;r.cat=document.getElementById('rf-cat').value;
+    r.cuisine=document.getElementById('rf-cuisine').value;
+    r.price=document.getElementById('rf-price').value;
+    r.maps=document.getElementById('rf-maps').value;
+    r.web=document.getElementById('rf-web').value;
+    r.img=imgToSave;  // safe: keeps original if not changed
+    r.tags=[...formTags];
+    // r.fav and r.visits are NOT touched
+    closeOv('restFormOv');render();saveLS();
+    toast('✅ Restaurant aktualisiert!');
+    openDetail(r.id);
   }
   updateCityDL();updateFpCities();
 }
@@ -1058,7 +1101,44 @@ function checkDupe(){
   else{dupeRid=null;document.getElementById('dupeWarn').style.display='none';}
 }
 function useDupe(){if(!dupeRid)return;closeOv('restFormOv');setTimeout(()=>openVisitForm(dupeRid,null),200);}
-function updateCityDL(){document.getElementById('cityList').innerHTML=allCities().map(c=>`<option value="${c}">`).join('');}
+function updateCityDL(){/* no datalist needed anymore */}
+
+/* ── GEOCODING (Nominatim) ── */
+let geoTimer=null;
+async function geoSearch(q){
+  clearTimeout(geoTimer);
+  const dd=document.getElementById('geoDropdown');
+  if(!q||q.length<2){dd.style.display='none';return;}
+  geoTimer=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&addressdetails=1`,{headers:{'Accept-Language':'de'}});
+      const results=await r.json();
+      if(!results.length){dd.style.display='none';return;}
+      dd.innerHTML=results.map((item,i)=>{
+        const city=item.address?.city||item.address?.town||item.address?.village||item.address?.hamlet||item.name;
+        const country=item.address?.country||'';
+        const state=item.address?.state||'';
+        const display=[city,state,country].filter(Boolean).join(', ');
+        return`<div onclick="selectGeo('${city.replace(/'/g,"\\'")}','${display.replace(/'/g,"\\'")}',${item.lat},${item.lon})"
+          style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);transition:background .15s"
+          onmouseenter="this.style.background='var(--bg3)'"
+          onmouseleave="this.style.background=''">${display}</div>`;
+      }).join('');
+      dd.style.display='block';
+    }catch(e){dd.style.display='none';}
+  },350);
+}
+function selectGeo(city,display,lat,lng){
+  document.getElementById('rf-city').value=display;
+  document.getElementById('rf-lat').value=lat;
+  document.getElementById('rf-lng').value=lng;
+  document.getElementById('geoDropdown').style.display='none';
+  checkDupe();
+}
+function clearGeoSuggestions(){
+  const dd=document.getElementById('geoDropdown');
+  if(dd)dd.style.display='none';
+}
 
 /* ── SCORES / REC ── */
 function updSc(){
@@ -1122,6 +1202,12 @@ function switchTab(t){
   if(t===4)setTimeout(initMap,120);
 }
 
+/* Navigate to a restaurant from anywhere — switches to home tab and opens detail */
+function navToRest(rid){
+  switchTab(0);
+  setTimeout(()=>openDetail(rid),80);
+}
+
 /* ── SORT / VIEW ── */
 const SORTS=['date','score','name'],SICS=['⇅','⬆','🔤'];
 function cycleSort(){sortMode=SORTS[(SORTS.indexOf(sortMode)+1)%3];document.getElementById('btnSort').textContent=SICS[SORTS.indexOf(sortMode)];toast(['Datum','Bewertung','Name'][SORTS.indexOf(sortMode)]);render();}
@@ -1140,7 +1226,7 @@ function renderTimeline(){
     h+=`<div class="tl-mo">${label}</div>`;
     items.forEach(({r,v},i)=>{
       const s=vSc(v);const isLast=i===items.length-1;
-      h+=`<div class="tl-i" onclick="openDetail(${r.id})">
+      h+=`<div class="tl-i" onclick="navToRest(${r.id})">
         <div class="tl-left"><div class="tl-dot ${scCls(s)}">${catIco(r.cat)}</div>${!isLast?'<div class="tl-line"></div>':''}</div>
         <div class="tl-card">
           <div class="tl-date">${fmtD(v.date)||'?'} · <span style="color:var(--acc);font-weight:800">${s??'–'}/10</span></div>
@@ -1181,16 +1267,31 @@ function renderStats(){
     <div class="kpi"><div class="kpi-v">${avgA}</div><div class="kpi-l">✨ Ambiente</div></div>
     <div class="kpi"><div class="kpi-v">${avgS}</div><div class="kpi-l">🤝 Service</div></div>
   </div></div>
-  <div class="sc"><div class="sc-t">🏆 Top</div>${top.map((r,i)=>`<div class="top-item" onclick="openDetail(${r.id})"><div class="top-rank">${i+1}</div><div class="top-info"><div class="top-name">${r.name}</div><div class="top-sub">${r.city}${r.cuisine?' · '+r.cuisine:''}</div></div><div class="top-sc">${rLSc(r)}</div></div>`).join('')}</div>
+  <div class="sc"><div class="sc-t">🏆 Top</div>${top.map((r,i)=>`<div class="top-item" onclick="navToRest(${r.id})"><div class="top-rank">${i+1}</div><div class="top-info"><div class="top-name">${r.name}</div><div class="top-sub">${r.city}${r.cuisine?' · '+r.cuisine:''}</div></div><div class="top-sc">${rLSc(r)}</div></div>`).join('')}</div>
   <div class="sc"><div class="sc-t">📍 Nach Stadt</div>${cities.map(([c,n])=>`<div class="bar-i"><div class="bar-l">${c}</div><div class="bar-t"><div class="bar-f" style="width:${(n/maxC*100).toFixed(0)}%"></div></div><div class="bar-c">${n}</div></div>`).join('')}</div>
   <div class="sc"><div class="sc-t">🗂 Nach Kategorie</div>${cats.map(([c,n])=>`<div class="bar-i"><div class="bar-l">${catIco(c)} ${c}</div><div class="bar-t"><div class="bar-f" style="width:${(n/maxCt*100).toFixed(0)}%"></div></div><div class="bar-c">${n}</div></div>`).join('')}</div>
   ${cuisines.length?`<div class="sc"><div class="sc-t">🍜 Nach Küche</div>${cuisines.map(([c,n])=>`<div class="bar-i"><div class="bar-l">${c}</div><div class="bar-t"><div class="bar-f" style="width:${(n/maxCu*100).toFixed(0)}%"></div></div><div class="bar-c">${n}</div></div>`).join('')}</div>`:''}
-  <div style="padding:0 2px 20px"><button class="btn btn-g" style="width:100%;margin-top:4px" onclick="exportCSV()">📤 CSV Export</button></div>`;
+  <div style="padding:0 2px 20px;display:flex;flex-direction:column;gap:8px;margin-top:4px">
+    <button class="btn btn-p" style="width:100%" onclick="exportJSON()">📤 Vollständiges Backup (JSON)</button>
+    <button class="btn btn-g" style="width:100%" onclick="exportCSV()">📊 CSV Export</button>
+    <button class="btn btn-g" style="width:100%;border-color:var(--acc);color:var(--acc)" onclick="triggerImport()">📥 Backup importieren (JSON)</button>
+  </div>`;
 }
 
 /* ── MAP ── */
-const CITY_COORDS={'Wien':[48.2082,16.3738],'München':[48.1351,11.5820],'Regensburg':[49.0134,12.1016],'Bärnau':[49.8102,12.4521],'Berlin':[52.5200,13.4050],'Hamburg':[53.5753,10.0153],'Frankfurt':[50.1109,8.6821],'Köln':[50.9333,6.9500],'Stuttgart':[48.7758,9.1829],'Nürnberg':[49.4521,11.0767],'Dresden':[51.0504,13.7373],'Leipzig':[51.3397,12.3731],'Salzburg':[47.8095,13.0550],'Graz':[47.0707,15.4395],'Zürich':[47.3769,8.5417],'Paris':[48.8566,2.3522],'Rom':[41.9028,12.4964],'Barcelona':[41.3851,2.1734],'Prag':[50.0755,14.4378],'Budapest':[47.4979,19.0402],'Amsterdam':[52.3676,4.9041]};
-function getCoords(city){if(CITY_COORDS[city])return CITY_COORDS[city];let h=0;for(let i=0;i<city.length;i++)h=(h*31+city.charCodeAt(i))&0xffff;return[48.5+(h%200-100)*0.04,12+(h%300-150)*0.04];}
+const CITY_DICT={'Wien':[48.2082,16.3738],'München':[48.1351,11.5820],'Regensburg':[49.0134,12.1016],'Bärnau':[49.8102,12.4521],'Berlin':[52.5200,13.4050],'Hamburg':[53.5753,10.0153],'Frankfurt':[50.1109,8.6821],'Köln':[50.9333,6.9500],'Stuttgart':[48.7758,9.1829],'Nürnberg':[49.4521,11.0767],'Dresden':[51.0504,13.7373],'Leipzig':[51.3397,12.3731],'Salzburg':[47.8095,13.0550],'Graz':[47.0707,15.4395],'Zürich':[47.3769,8.5417],'Paris':[48.8566,2.3522],'Rom':[41.9028,12.4964],'Barcelona':[41.3851,2.1734],'Prag':[50.0755,14.4378],'Budapest':[47.4979,19.0402],'Amsterdam':[52.3676,4.9041],'Würzburg':[49.7944,9.9294],'Bamberg':[49.8988,10.9028],'Augsburg':[48.3717,10.8983],'Passau':[48.5742,13.4579],'Landshut':[48.5369,12.1525]};
+
+function getRestCoords(r){
+  // 1. Stored from geocoding
+  if(r.lat&&r.lng)return[parseFloat(r.lat),parseFloat(r.lng)];
+  // 2. Dictionary lookup by city name (match first word to handle "Würzburg, Bayern, Deutschland")
+  const cityKey=r.city.split(',')[0].trim();
+  if(CITY_DICT[cityKey])return CITY_DICT[cityKey];
+  // 3. Deterministic hash fallback (Europe area)
+  let h=0;for(let i=0;i<cityKey.length;i++)h=(h*31+cityKey.charCodeAt(i))&0xffff;
+  return[48.5+(h%200-100)*0.04,12+(h%300-150)*0.04];
+}
+
 function renderMap(){
   const el=document.getElementById('mapEl');if(!el)return;
   if(leafMap){try{leafMap.remove();}catch(e){}leafMap=null;}
@@ -1201,9 +1302,10 @@ function renderMap(){
     if(!filtered.length)return;
     const bounds=[];const offsets={};
     filtered.forEach(r=>{
-      const base=getCoords(r.city);
-      const cnt=offsets[r.city]=(offsets[r.city]||0)+1;
-      const angle=(cnt-1)*(Math.PI*2/Math.max(6,filtered.filter(x=>x.city===r.city).length));
+      const base=getRestCoords(r);
+      const cityKey=r.city.split(',')[0].trim();
+      const cnt=offsets[cityKey]=(offsets[cityKey]||0)+1;
+      const angle=(cnt-1)*(Math.PI*2/Math.max(6,filtered.filter(x=>x.city.split(',')[0].trim()===cityKey).length));
       const dist=cnt===1?0:0.0015;
       const ll=[base[0]+Math.sin(angle)*dist,base[1]+Math.cos(angle)*dist];
       bounds.push(ll);
@@ -1212,7 +1314,7 @@ function renderMap(){
       const txt=lsc!=null?lsc:catIco(r.cat);
       const icon=L.divIcon({className:'',html:`<div style="width:38px;height:38px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:${lsc!=null?'13':'15'}px;font-weight:800;color:#111;box-shadow:0 2px 10px rgba(0,0,0,.35);border:2px solid white;cursor:pointer;font-family:Outfit,sans-serif">${txt}</div>`,iconSize:[38,38],iconAnchor:[19,19]});
       const m=L.marker(ll,{icon}).addTo(leafMap);
-      m.on('click',()=>openDetail(r.id));
+      m.on('click',()=>{closeOv('detailOv');openDetail(r.id);});
       const lv=rLV(r);
       m.bindTooltip(`<b>${r.name}</b><br>📍 ${r.city}${lsc?' · ⭐'+lsc:''}${lv?.date?' · '+fmtD(lv.date):''}`,{direction:'top',offset:[0,-22],opacity:.95});
     });
@@ -1222,12 +1324,154 @@ function renderMap(){
 }
 function initMap(){renderMap();}
 
-/* ── EXPORT ── */
+/* ── EXPORT / IMPORT ── */
+function exportJSON(){
+  const payload={version:1,exportedAt:new Date().toISOString(),nRid,nVid,CUISINES,DB};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Tastemap_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('📤 Backup gespeichert');
+}
+
 function exportCSV(){
   const h=['Datum','Stadt','Kategorie','Name','Küche','Tags','Preis','Gericht','Essen','Ambiente','Service','Gesamt','Empfehlung','Notizen','Maps'];
-  const rows=[];DB.forEach(r=>r.visits.forEach(v=>{rows.push([v.date,r.city,r.cat,r.name,r.cuisine,r.tags.join(';'),r.price,v.dish,v.sE??'',v.sA??'',v.sS??'',vSc(v)??'',v.rec,v.notes?.replace(/\n/g,' '),r.maps].map(x=>`"${String(x||'').replace(/"/g,'""')}"`).join(';'));}));
+  const rows=[];
+  DB.forEach(r=>r.visits.forEach(v=>{
+    rows.push([v.date,r.city,r.cat,r.name,r.cuisine,r.tags.join(';'),r.price,v.dish,v.sE??'',v.sA??'',v.sS??'',vSc(v)??'',v.rec,v.notes?.replace(/\n/g,' '),r.maps]
+      .map(x=>`"${String(x||'').replace(/"/g,'""')}"`).join(';'));
+  }));
   const blob=new Blob(['\uFEFF'+[h.join(';'),...rows].join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Tastemap.csv';a.click();toast('📤 CSV exportiert');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Tastemap.csv';a.click();
+  toast('📤 CSV exportiert');
+}
+
+function triggerImport(){
+  document.getElementById('importFileInp').click();
+}
+
+function handleImportFile(inp){
+  const f=inp.files[0];if(!f)return;
+  inp.value='';
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    try{
+      const payload=JSON.parse(ev.target.result);
+      if(!payload.DB||!Array.isArray(payload.DB))throw new Error('Ungültiges Format');
+      runMergePreview(payload);
+    }catch(e){
+      toast('❌ Fehler: '+e.message);
+    }
+  };
+  rd.readAsText(f);
+}
+
+// Merge logic: compare by ID first, then name+city normalized as fallback
+function normalizeKey(r){return(r.name||'').toLowerCase().trim()+'|||'+(r.city||'').split(',')[0].toLowerCase().trim();}
+
+function runMergePreview(payload){
+  const incoming=payload.DB||[];
+  const existingIds=new Set(DB.map(r=>r.id));
+  const existingKeys=new Set(DB.map(r=>normalizeKey(r)));
+
+  const toAdd=[];
+  const skipped=[];
+  const mergeVisits=[]; // [{existing, newVisits}]
+
+  incoming.forEach(r=>{
+    const idMatch=existingIds.has(r.id);
+    const keyMatch=existingKeys.has(normalizeKey(r));
+
+    if(!idMatch&&!keyMatch){
+      // Completely new restaurant
+      toAdd.push(r);
+    } else {
+      // Restaurant exists — check for new visits
+      const existing=DB.find(x=>x.id===r.id)||DB.find(x=>normalizeKey(x)===normalizeKey(r));
+      if(existing&&r.visits&&r.visits.length){
+        const existVisitIds=new Set(existing.visits.map(v=>v.id));
+        const existVisitKeys=new Set(existing.visits.map(v=>(v.date||'')+'|||'+(v.dish||'')));
+        const newV=r.visits.filter(v=>!existVisitIds.has(v.id)&&!existVisitKeys.has((v.date||'')+'|||'+(v.dish||'')));
+        if(newV.length) mergeVisits.push({existing,newVisits:newV,sourceName:r.name});
+      }
+      skipped.push(r);
+    }
+  });
+
+  showImportPreview(toAdd,skipped,mergeVisits,payload);
+}
+
+function showImportPreview(toAdd,skipped,mergeVisits,payload){
+  const total=toAdd.length+mergeVisits.reduce((s,m)=>s+m.newVisits.length,0);
+  let h=`<button class="mox" onclick="closeOv('importPreviewOv')">✕</button>
+  <div class="dm-body">
+  <div style="font-size:19px;font-weight:900;margin-bottom:4px">📥 Import Vorschau</div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Datei: ${new Date(payload.exportedAt||Date.now()).toLocaleDateString('de-DE')}</div>`;
+
+  if(total===0){
+    h+=`<div class="dm-sec"><div class="dm-sec-txt" style="text-align:center;padding:10px 0">✅ Alle ${skipped.length} Einträge bereits vorhanden.<br>Nichts Neues zum Importieren.</div></div>`;
+  } else {
+    if(toAdd.length){
+      h+=`<div class="dm-sec"><div class="dm-sec-t">🆕 Neue Restaurants (${toAdd.length})</div>`;
+      toAdd.forEach(r=>h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:16px">${catIco(r.cat)}</span>
+        <div><div style="font-size:13px;font-weight:700">${r.name}</div>
+        <div style="font-size:11px;color:var(--text3)">📍 ${r.city} · ${r.visits?.length||0} Besuch${r.visits?.length!==1?'e':''}</div></div>
+      </div>`);
+      h+=`</div>`;
+    }
+    if(mergeVisits.length){
+      h+=`<div class="dm-sec"><div class="dm-sec-t">➕ Neue Besuche bei vorhandenen Restaurants</div>`;
+      mergeVisits.forEach(m=>{
+        h+=`<div style="padding:6px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:13px;font-weight:700">${m.sourceName}</div>`;
+        m.newVisits.forEach(v=>h+=`<div style="font-size:11px;color:var(--text3);margin-top:2px">📅 ${fmtD(v.date)||'?'}${v.dish&&v.dish!=='–'?' · 🍴'+v.dish:''}</div>`);
+        h+=`</div>`;
+      });
+      h+=`</div>`;
+    }
+    if(skipped.length){
+      h+=`<div style="font-size:12px;color:var(--text3);margin-bottom:12px">⏭ ${skipped.length} bereits vorhandene Einträge werden übersprungen.</div>`;
+    }
+  }
+
+  h+=`<div class="vd-actions">
+    <button class="vd-btn" onclick="closeOv('importPreviewOv')">Abbrechen</button>
+    ${total>0?`<button class="vd-btn edit" onclick="executeImport(importPayload)">✅ ${total} Element${total!==1?'e':''} importieren</button>`:''}
+  </div></div>`;
+
+  // Store payload globally for the confirm button
+  window.importPayload={toAdd,mergeVisits,payload};
+  document.getElementById('importPreviewBox').innerHTML=h;
+  document.getElementById('importPreviewOv').classList.add('open');
+}
+
+function executeImport(data){
+  const {toAdd,mergeVisits,payload}=data;
+  let maxRid=nRid,maxVid=nVid;
+
+  // Re-assign IDs to avoid collisions
+  toAdd.forEach(r=>{
+    const newR={...r,id:maxRid++};
+    // Re-assign visit IDs too
+    newR.visits=(r.visits||[]).map(v=>({...v,id:maxVid++}));
+    DB.push(newR);
+  });
+
+  mergeVisits.forEach(({existing,newVisits})=>{
+    newVisits.forEach(v=>existing.visits.push({...v,id:maxVid++}));
+  });
+
+  // Merge new cuisines from import
+  if(payload.CUISINES){
+    payload.CUISINES.forEach(c=>{if(!CUISINES.includes(c))CUISINES.push(c);});
+  }
+
+  nRid=maxRid;nVid=maxVid;
+  saveLS();render();
+  closeOv('importPreviewOv');
+  toast(`✅ ${toAdd.length+mergeVisits.reduce((s,m)=>s+m.newVisits.length,0)} Elemente importiert`);
 }
 
 /* ── OVERLAY HELPERS ── */
