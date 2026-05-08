@@ -393,8 +393,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
   <input type="hidden" id="vf-rid">
   <input type="hidden" id="vf-vid">
 
+  <div class="fg">
+    <label class="fl">Foto (optional)</label>
+    <div class="img-area" id="vImgArea" onclick="document.getElementById('vImgInp').click()">
+      <img id="vImgPrev" class="img-prev" style="display:none">
+      <div class="img-ico">📷</div>
+      <div class="img-hint">Foto zum Besuch / Gericht</div>
+    </div>
+    <input type="file" id="vImgInp" accept="image/*" style="display:none" onchange="handleVImg(this)">
+    <button class="img-rm" id="vImgRm" onclick="removeVImg(event)">✕</button>
+  </div>
+
   <div class="fg"><label class="fl">Datum *</label><input class="fi" id="vf-date" type="date"></div>
-  <div class="fg"><label class="fl">Gericht / Aktivität</label><input class="fi" id="vf-dish" placeholder="z.B. Schnitzel mit Pommes"></div>
+  <div class="fg"><label class="fl">Gericht / Aktivität</label><input class="fi" id="vf-dish" placeholder="z.B. Wiener Schnitzel mit Kartoffelsalat"></div>
 
   <div class="fg">
     <label class="fl">Bewertung</label>
@@ -404,7 +415,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
     <div class="total-sc"><div class="ts-n" id="ts-n">5.0</div><div class="ts-l">Gesamtnote (Ø)</div></div>
   </div>
 
-  <div class="fg"><label class="fl">Empfehlung Restaurant</label>
+  <div class="fg"><label class="fl">Empfehlung</label>
     <div class="rec-tog">
       <button class="ropt sly" data-r="Ja" onclick="setRec(this)">👍 Ja</button>
       <button class="ropt" data-r="Geht so" onclick="setRec(this)">🤷 Geht so</button>
@@ -413,23 +424,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
   </div>
 
   <div class="fg"><label class="fl">Notizen</label><textarea class="ft" id="vf-notes" placeholder="Eindrücke, Tipps …"></textarea></div>
-
-  <div class="div"></div>
-  <div class="fg"><label class="fl">Gericht bewerten (optional)</label>
-    <div class="frow" style="margin-bottom:8px">
-      <input class="fi" id="vf-dnm" placeholder="Gerichtsname">
-      <div style="display:flex;gap:6px;align-items:center">
-        <input class="fi" id="vf-dsc" type="number" min="1" max="10" step="0.5" placeholder="Note" style="width:70px">
-        <select class="fs" id="vf-drec" style="flex:1">
-          <option value="Ja">👍 Ja</option>
-          <option value="Geht so">🤷 Geht so</option>
-          <option value="Nein">👎 Nein</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn btn-g" style="width:100%;padding:10px" onclick="addDish()">+ Gericht hinzufügen</button>
-    <div id="dishList" style="margin-top:8px" class="dish-list"></div>
-  </div>
 
   <div class="btn-row">
     <button class="btn btn-g" onclick="closeOv('visitFormOv')">Abbrechen</button>
@@ -635,11 +629,62 @@ function scCls(s){if(s==null)return'sn';if(s>=8)return'sh';if(s>=6)return'sm';re
 function recCls(r){return r==='Ja'?'ry':r==='Nein'?'rn':'rm'}
 function fmtD(d){if(!d)return'';const[y,m,dd]=d.split('-');return`${dd}.${m}.${y}`}
 function catIco(c){return CAT_ICONS[c]||'📍'}
+// Show only first part of city (before first comma) for card display
+function cityShort(city){return(city||'').split(',')[0].trim()}
 function allCities(){return[...new Set(DB.map(r=>r.city))].sort()}
 function allTags(){return[...new Set(DB.flatMap(r=>r.tags))].sort()}
 function allCuisinesUsed(){return[...new Set(DB.map(r=>r.cuisine).filter(Boolean))].sort()}
-function saveLS(){try{localStorage.setItem('tm6',JSON.stringify({DB,nRid,nVid,CUISINES}))}catch(e){}}
-function loadLS(){try{const d=JSON.parse(localStorage.getItem('tm6'));if(d){DB=d.DB;nRid=d.nRid;nVid=d.nVid;if(d.CUISINES)CUISINES=d.CUISINES;}}catch(e){}}
+function saveLS(){
+  try{
+    // Separate images from main data to handle localStorage quota
+    const imgMap={};
+    const dbClean=DB.map(r=>{
+      const rClean={...r};
+      // Restaurant image
+      if(r.img){imgMap[`r_${r.id}`]=r.img;rClean.img='__img__';}
+      // Visit images
+      rClean.visits=(r.visits||[]).map(v=>{
+        const vClean={...v};
+        if(v.img){imgMap[`v_${v.id}`]=v.img;vClean.img='__img__';}
+        return vClean;
+      });
+      return rClean;
+    });
+    localStorage.setItem('tm6',JSON.stringify({DB:dbClean,nRid,nVid,CUISINES}));
+    // Store images separately, one key per image
+    // Clear old img keys first
+    Object.keys(localStorage).filter(k=>k.startsWith('tm6_img_')).forEach(k=>localStorage.removeItem(k));
+    Object.entries(imgMap).forEach(([k,v])=>{
+      try{localStorage.setItem('tm6_img_'+k,v);}catch(e){/* image too large, skip */}
+    });
+  }catch(e){
+    // If still failing, try without images at all
+    try{
+      const dbNoImg=DB.map(r=>({...r,img:null,visits:(r.visits||[]).map(v=>({...v,img:null}))}));
+      localStorage.setItem('tm6',JSON.stringify({DB:dbNoImg,nRid,nVid,CUISINES}));
+      toast('⚠️ Bilder konnten nicht gespeichert werden (zu groß)');
+    }catch(e2){}
+  }
+}
+function loadLS(){
+  try{
+    const d=JSON.parse(localStorage.getItem('tm6'));
+    if(d){
+      DB=d.DB.map(r=>{
+        const rr={...r};
+        if(r.img==='__img__')rr.img=localStorage.getItem('tm6_img_r_'+r.id)||null;
+        rr.visits=(r.visits||[]).map(v=>{
+          const vv={...v};
+          if(v.img==='__img__')vv.img=localStorage.getItem('tm6_img_v_'+v.id)||null;
+          return vv;
+        });
+        return rr;
+      });
+      nRid=d.nRid;nVid=d.nVid;
+      if(d.CUISINES)CUISINES=d.CUISINES;
+    }
+  }catch(e){}
+}
 function togS(set,val,btn){if(set.has(val)){set.delete(val);btn?.classList.remove('on');}else{set.add(val);btn?.classList.add('on');}}
 
 /* ── FILTER ── */
@@ -720,7 +765,7 @@ function listCard(r,i){
         <div class="score-bub ${scCls(lsc)}">${lsc??'●'}${lsc!=null?`<span class="sl">/10</span>`:''}</div>
       </div>
       <div class="ecard-row1">
-        <span class="tag city">📍 ${r.city}</span>
+        <span class="tag city">📍 ${cityShort(r.city)}</span>
         <span class="tag">${catIco(r.cat)} ${r.cat}</span>
         ${r.cuisine?`<span class="tag cuisine">${r.cuisine}</span>`:''}
       </div>
@@ -752,7 +797,7 @@ function gridCard(r,i){
     ${r.img?`<img class="gcard-img" src="${r.img}" style="font-size:0">`:`<div class="gcard-img">${catIco(r.cat)}</div>`}
     <div class="gcard-body">
       <div class="gcard-name">${r.name}</div>
-      <div class="gcard-row"><span class="gcard-city">📍 ${r.city}</span><span class="gcard-score ${scCls(lsc)}">${lsc??'–'}</span></div>
+      <div class="gcard-row"><span class="gcard-city">📍 ${cityShort(r.city)}</span><span class="gcard-score ${scCls(lsc)}">${lsc??'–'}</span></div>
       <div class="gcard-row">
         <span class="rec-b ${recCls(lv?.rec||'–')}" style="font-size:11px">${lv?.rec==='Ja'?'👍':lv?.rec==='Nein'?'👎':'🤷'} ${lv?.rec||'–'}</span>
         ${r.visits.length>1?`<span style="font-size:11px;color:var(--green)">🔄${r.visits.length}</span>`:''}
@@ -836,7 +881,7 @@ function openDetail(rid){
     <div class="dm-big ${scCls(lsc)}">${lsc??'–'}${lsc!=null?'<span class="dbl">/10</span>':''}</div>
     <div>
       <div class="dm-title">${r.name}</div>
-      <div class="dm-sub">📍 ${r.city}${r.price?' · '+r.price:''}${r.cuisine?' · '+r.cuisine:''}<br>${r.visits.length} Besuch${r.visits.length!==1?'e':''}</div>
+      <div class="dm-sub">📍 ${cityShort(r.city)}${r.price?' · '+r.price:''}${r.cuisine?' · '+r.cuisine:''}<br>${r.visits.length} Besuch${r.visits.length!==1?'e':''}</div>
     </div>
   </div>
   <div class="dm-tags">
@@ -893,7 +938,10 @@ function openVisitDetail(rid,vid){
   const r=DB.find(x=>x.id===rid);if(!r)return;
   const v=r.visits.find(x=>x.id===vid);if(!v)return;
   const s=vSc(v);
-  let h=`<button class="mox" onclick="closeOv('visitDetailOv')">✕</button>
+  let h='';
+  // Visit photo if present
+  if(v.img)h+=`<img style="width:100%;height:180px;object-fit:cover;display:block;border-radius:24px 24px 0 0" src="${v.img}">`;
+  h+=`<button class="mox" onclick="closeOv('visitDetailOv')" style="${v.img?'':'position:relative;float:right;margin:12px 12px 0 0'}">✕</button>
   <div class="dm-body">
   <div class="vd-score-row">
     <div class="vd-big ${scCls(s)}">${s??'–'}${s!=null?'<span class="dbl">/10</span>':''}</div>
@@ -913,18 +961,6 @@ function openVisitDetail(rid,vid){
   }
   if(v.dish&&v.dish!=='–')h+=`<div class="dm-sec"><div class="dm-sec-t">Gericht</div><div class="dm-sec-txt">🍴 ${v.dish}</div></div>`;
   if(v.notes)h+=`<div class="dm-sec"><div class="dm-sec-t">Notizen</div><div class="dm-sec-txt">${v.notes}</div></div>`;
-  if(v.dishes&&v.dishes.length){
-    h+=`<div class="dm-sec"><div class="dm-sec-t">Gerichtsbewertungen</div><div class="dish-list">`;
-    v.dishes.forEach(d=>{
-      h+=`<div class="dish-item">
-        <div class="dish-name">🍴 ${d.name}</div>
-        <div class="dish-score ${scCls(d.score)}">${d.score??'–'}</div>
-        <span class="dish-rec rec-b ${recCls(d.rec)}">${d.rec}</span>
-      </div>`;
-    });
-    h+=`</div></div>`;
-  }
-  // Chart if multiple visits
   if(r.visits.length>1){
     const chronV=[...r.visits].sort((a,b)=>new Date(a.date)-new Date(b.date));
     h+=`<div class="dm-sec"><div class="dm-sec-t">Verlauf</div>${buildChart(chronV)}</div>`;
@@ -949,13 +985,17 @@ function delVisit(rid,vid){
 }
 
 /* ── VISIT FORM (z=500) ── */
+let formVisitImg=null;
+
 function openVisitForm(rid,vid){
   const r=DB.find(x=>x.id===rid);if(!r)return;
   const today=new Date().toISOString().split('T')[0];
-  formDishes=[];
+  formVisitImg=null;
   document.getElementById('vf-rid').value=rid;
   document.getElementById('vf-vid').value=vid??'';
-  document.getElementById('dishList').innerHTML='';
+  document.getElementById('vImgPrev').style.display='none';
+  document.getElementById('vImgRm').style.display='none';
+  document.getElementById('vImgPrev').src='';
   if(!vid){
     document.getElementById('vfTitle').textContent=`➕ Neuer Besuch · ${r.name}`;
     document.getElementById('vf-date').value=today;
@@ -971,13 +1011,14 @@ function openVisitForm(rid,vid){
     document.getElementById('vf-notes').value=v.notes||'';
     document.getElementById('vf-se').value=v.sE??5;document.getElementById('vf-sa').value=v.sA??5;document.getElementById('vf-ss').value=v.sS??5;
     selRec=v.rec||'Ja';
-    formDishes=[...(v.dishes||[])];
-    renderDishList();
+    if(v.img){
+      formVisitImg=v.img;
+      document.getElementById('vImgPrev').src=v.img;
+      document.getElementById('vImgPrev').style.display='block';
+      document.getElementById('vImgRm').style.display='flex';
+    }
   }
   updSc();syncRec();
-  document.getElementById('vf-dnm').value='';
-  document.getElementById('vf-dsc').value='';
-  document.getElementById('vf-drec').value='Ja';
   document.getElementById('visitFormOv').classList.add('open');
 }
 
@@ -985,32 +1026,56 @@ function saveVisit(){
   const rid=parseInt(document.getElementById('vf-rid').value);
   const vidRaw=document.getElementById('vf-vid').value;
   const r=DB.find(x=>x.id===rid);if(!r)return;
-  const vObj={id:vidRaw?parseInt(vidRaw):nVid++,date:document.getElementById('vf-date').value,dish:document.getElementById('vf-dish').value,sE:parseFloat(document.getElementById('vf-se').value),sA:parseFloat(document.getElementById('vf-sa').value),sS:parseFloat(document.getElementById('vf-ss').value),rec:selRec,notes:document.getElementById('vf-notes').value,dishes:[...formDishes]};
+  const existingVisit=vidRaw?r.visits.find(x=>x.id===parseInt(vidRaw)):null;
+  // Keep existing img if none newly set
+  const imgToSave=formVisitImg!==null?formVisitImg:(existingVisit?.img||null);
+  const vObj={
+    id:vidRaw?parseInt(vidRaw):nVid++,
+    date:document.getElementById('vf-date').value,
+    dish:document.getElementById('vf-dish').value,
+    sE:parseFloat(document.getElementById('vf-se').value),
+    sA:parseFloat(document.getElementById('vf-sa').value),
+    sS:parseFloat(document.getElementById('vf-ss').value),
+    rec:selRec,
+    notes:document.getElementById('vf-notes').value,
+    img:imgToSave,
+    dishes:existingVisit?.dishes||[]
+  };
   if(!vidRaw){r.visits.push(vObj);toast(`✅ Besuch #${r.visits.length} gespeichert!`);}
   else{const vi=r.visits.findIndex(x=>x.id===parseInt(vidRaw));if(vi>=0)r.visits[vi]=vObj;toast('✅ Besuch aktualisiert!');}
   closeOv('visitFormOv');render();saveLS();
   openDetail(rid);
 }
 
-/* Dish sub-rating */
-function addDish(){
-  const nm=document.getElementById('vf-dnm').value.trim();
-  const sc=parseFloat(document.getElementById('vf-dsc').value);
-  const rec=document.getElementById('vf-drec').value;
-  if(!nm)return;
-  formDishes.push({name:nm,score:isNaN(sc)?null:sc,rec});
-  document.getElementById('vf-dnm').value='';document.getElementById('vf-dsc').value='';
-  renderDishList();
+function handleVImg(inp){
+  const f=inp.files[0];if(!f)return;
+  // Compress image before storing
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=800;
+      let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      formVisitImg=canvas.toDataURL('image/jpeg',0.75);
+      document.getElementById('vImgPrev').src=formVisitImg;
+      document.getElementById('vImgPrev').style.display='block';
+      document.getElementById('vImgRm').style.display='flex';
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(f);
 }
-function removeDish(i){formDishes.splice(i,1);renderDishList();}
-function renderDishList(){
-  document.getElementById('dishList').innerHTML=formDishes.map((d,i)=>`
-    <div class="dish-item">
-      <div class="dish-name">🍴 ${d.name}</div>
-      <div class="dish-score ${scCls(d.score)}">${d.score??'–'}</div>
-      <span class="dish-rec rec-b ${recCls(d.rec)}">${d.rec}</span>
-      <button onclick="removeDish(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0">✕</button>
-    </div>`).join('');
+function removeVImg(ev){
+  ev.stopPropagation();
+  formVisitImg=null;
+  document.getElementById('vImgPrev').style.display='none';
+  document.getElementById('vImgRm').style.display='none';
+  document.getElementById('vImgInp').value='';
 }
 
 /* ── RESTAURANT FORM ── */
@@ -1114,15 +1179,18 @@ async function geoSearch(q){
       const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&addressdetails=1`,{headers:{'Accept-Language':'de'}});
       const results=await r.json();
       if(!results.length){dd.style.display='none';return;}
-      dd.innerHTML=results.map((item,i)=>{
+      dd.innerHTML=results.map((item)=>{
         const city=item.address?.city||item.address?.town||item.address?.village||item.address?.hamlet||item.name;
         const country=item.address?.country||'';
+        // Display in dropdown: City, State, Country (full for disambiguation)
         const state=item.address?.state||'';
-        const display=[city,state,country].filter(Boolean).join(', ');
-        return`<div onclick="selectGeo('${city.replace(/'/g,"\\'")}','${display.replace(/'/g,"\\'")}',${item.lat},${item.lon})"
+        const dropdownLabel=[city,state,country].filter(Boolean).join(', ');
+        // What gets STORED: City, Country only (no state)
+        const storedLabel=[city,country].filter(Boolean).join(', ');
+        return`<div onclick="selectGeo('${storedLabel.replace(/'/g,"\\'")}','${storedLabel.replace(/'/g,"\\'")}',${item.lat},${item.lon})"
           style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);transition:background .15s"
           onmouseenter="this.style.background='var(--bg3)'"
-          onmouseleave="this.style.background=''">${display}</div>`;
+          onmouseleave="this.style.background=''">${dropdownLabel}</div>`;
       }).join('');
       dd.style.display='block';
     }catch(e){dd.style.display='none';}
@@ -1160,8 +1228,29 @@ function addTagChip(t){
 function rmTag(t,el){formTags=formTags.filter(x=>x!==t);el.remove();}
 function tagKD(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.trim().replace(',','');if(v){addTagChip(v);e.target.value=''}}}
 
-/* ── IMG ── */
-function handleImg(inp){const f=inp.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{formImg=ev.target.result;document.getElementById('imgPrev').src=formImg;document.getElementById('imgPrev').style.display='block';document.getElementById('imgRm').style.display='flex';};rd.readAsDataURL(f);}
+/* ── IMG (Restaurant) ── */
+function handleImg(inp){
+  const f=inp.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=900;
+      let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      formImg=canvas.toDataURL('image/jpeg',0.78);
+      document.getElementById('imgPrev').src=formImg;
+      document.getElementById('imgPrev').style.display='block';
+      document.getElementById('imgRm').style.display='flex';
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(f);
+}
 function removeImg(ev){ev.stopPropagation();formImg=null;document.getElementById('imgPrev').style.display='none';document.getElementById('imgRm').style.display='none';document.getElementById('imgInp').value='';}
 
 /* ── FAV ── */
