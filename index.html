@@ -986,11 +986,13 @@ function delVisit(rid,vid){
 
 /* ── VISIT FORM (z=500) ── */
 let formVisitImg=null;
+let formVisitOrigImg=null; // preserves existing image when editing
 
 function openVisitForm(rid,vid){
   const r=DB.find(x=>x.id===rid);if(!r)return;
   const today=new Date().toISOString().split('T')[0];
   formVisitImg=null;
+  formVisitOrigImg=null;
   document.getElementById('vf-rid').value=rid;
   document.getElementById('vf-vid').value=vid??'';
   document.getElementById('vImgPrev').style.display='none';
@@ -1012,6 +1014,7 @@ function openVisitForm(rid,vid){
     document.getElementById('vf-se').value=v.sE??5;document.getElementById('vf-sa').value=v.sA??5;document.getElementById('vf-ss').value=v.sS??5;
     selRec=v.rec||'Ja';
     if(v.img){
+      formVisitOrigImg=v.img; // remember existing image
       formVisitImg=v.img;
       document.getElementById('vImgPrev').src=v.img;
       document.getElementById('vImgPrev').style.display='block';
@@ -1027,8 +1030,10 @@ function saveVisit(){
   const vidRaw=document.getElementById('vf-vid').value;
   const r=DB.find(x=>x.id===rid);if(!r)return;
   const existingVisit=vidRaw?r.visits.find(x=>x.id===parseInt(vidRaw)):null;
-  // Keep existing img if none newly set
-  const imgToSave=formVisitImg!==null?formVisitImg:(existingVisit?.img||null);
+  // If user explicitly removed image: formVisitImg=null AND formVisitOrigImg had something → save null
+  // If user didn't touch image: formVisitImg still equals formVisitOrigImg → save original
+  // If user uploaded new image: formVisitImg is new base64 → save new
+  const imgToSave=formVisitImg;
   const vObj={
     id:vidRaw?parseInt(vidRaw):nVid++,
     date:document.getElementById('vf-date').value,
@@ -1073,6 +1078,7 @@ function handleVImg(inp){
 function removeVImg(ev){
   ev.stopPropagation();
   formVisitImg=null;
+  formVisitOrigImg=null;
   document.getElementById('vImgPrev').style.display='none';
   document.getElementById('vImgRm').style.display='none';
   document.getElementById('vImgInp').value='';
