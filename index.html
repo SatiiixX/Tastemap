@@ -641,7 +641,7 @@ function allTags(){return[...new Set(DB.flatMap(r=>r.tags))].sort()}
 function allCuisinesUsed(){return[...new Set(DB.map(r=>r.cuisine).filter(Boolean))].sort()}
 function saveLS(){
   try{
-    // Step 1: Build image map FIRST, before touching localStorage
+    // Strip images from main JSON, store each separately
     const imgMap={};
     const dbClean=DB.map(r=>{
       const rClean={...r,visits:null};
@@ -660,32 +660,40 @@ function saveLS(){
       return rClean;
     });
 
-    // Step 2: Save main data
+    // 1. Save main data (no images — always small)
     localStorage.setItem('tm6',JSON.stringify({DB:dbClean,nRid,nVid,CUISINES}));
 
-    // Step 3: Remove ONLY img keys that are no longer needed
-    const newKeys=new Set(Object.keys(imgMap).map(k=>'tm6_img_'+k));
+    // 2. Remove stale image keys
+    const activeKeys=new Set(Object.keys(imgMap).map(k=>'tm6_img_'+k));
     Object.keys(localStorage)
-      .filter(k=>k.startsWith('tm6_img_')&&!newKeys.has(k))
+      .filter(k=>k.startsWith('tm6_img_')&&!activeKeys.has(k))
       .forEach(k=>localStorage.removeItem(k));
 
-    // Step 4: Save each image individually — skip if too large but don't fail everything
-    Object.entries(imgMap).forEach(([k,v])=>{
+    // 3. Save images (already compressed JPEG at upload time)
+    Object.entries(imgMap).forEach(([k,imgData])=>{
       try{
-        localStorage.setItem('tm6_img_'+k,v);
-      }catch(imgErr){
-        // Image too large — compress further and retry
+        localStorage.setItem('tm6_img_'+k,imgData);
+      }catch(e){
+        // QuotaExceeded — try with lower quality
         try{
-          const compressed=compressBase64(v,0.5,600);
-          localStorage.setItem('tm6_img_'+k,compressed);
+          const canvas=document.createElement('canvas');
+          const img=new Image();
+          img.src=imgData;
+          if(img.naturalWidth>0){
+            const MAX=400;
+            let w=img.naturalWidth,h=img.naturalHeight;
+            if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+            canvas.width=w;canvas.height=h;
+            canvas.getContext('2d').drawImage(img,0,0,w,h);
+            localStorage.setItem('tm6_img_'+k,canvas.toDataURL('image/jpeg',0.4));
+          }
         }catch(e2){
-          // Still too large, skip this image silently
-          console.warn('Image too large to save:',k);
+          console.warn('Could not save image',k,e2);
         }
       }
     });
   }catch(e){
-    console.error('saveLS error:',e);
+    console.error('saveLS:',e);
     toast('⚠️ Speichern fehlgeschlagen');
   }
 }
@@ -698,16 +706,10 @@ function loadLS(){
     if(!d||!d.DB)return;
     DB=d.DB.map(r=>{
       const rr={...r};
-      // Restore restaurant image
-      if(r.img==='__img__'){
-        rr.img=localStorage.getItem('tm6_img_r_'+r.id)||null;
-      }
-      // Restore visit images
+      if(r.img==='__img__')rr.img=localStorage.getItem('tm6_img_r_'+r.id)||null;
       rr.visits=(r.visits||[]).map(v=>{
         const vv={...v};
-        if(v.img==='__img__'){
-          vv.img=localStorage.getItem('tm6_img_v_'+v.id)||null;
-        }
+        if(v.img==='__img__')vv.img=localStorage.getItem('tm6_img_v_'+v.id)||null;
         return vv;
       });
       return rr;
@@ -716,25 +718,8 @@ function loadLS(){
     nVid=d.nVid||nVid;
     if(d.CUISINES&&Array.isArray(d.CUISINES))CUISINES=d.CUISINES;
   }catch(e){
-    console.error('loadLS error:',e);
+    console.error('loadLS:',e);
   }
-}
-
-// Compress a base64 image to target quality and max dimension
-function compressBase64(dataUrl,quality,maxDim){
-  return new Promise(resolve=>{
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      let w=img.width,h=img.height;
-      if(w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
-      if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      resolve(canvas.toDataURL('image/jpeg',quality));
-    };
-    img.src=dataUrl;
-  });
 }
 function togS(set,val,btn){if(set.has(val)){set.delete(val);btn?.classList.remove('on');}else{set.add(val);btn?.classList.add('on');}}
 
@@ -1105,19 +1090,20 @@ function saveVisit(){
 
 function handleVImg(inp){
   const f=inp.files[0];if(!f)return;
-  // Compress image before storing
   const reader=new FileReader();
   reader.onload=ev=>{
     const img=new Image();
     img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const MAX=800;
+      const MAX=900;
       let w=img.width,h=img.height;
       if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
       if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      const canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
-      formVisitImg=canvas.toDataURL('image/jpeg',0.75);
+      // Store compressed JPEG directly — saveLS just saves this string as-is
+      formVisitImg=canvas.toDataURL('image/jpeg',0.72);
+      formVisitOrigImg=formVisitImg;
       document.getElementById('vImgPrev').src=formVisitImg;
       document.getElementById('vImgPrev').style.display='block';
       document.getElementById('vImgRm').style.display='flex';
