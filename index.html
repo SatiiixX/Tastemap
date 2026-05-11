@@ -1337,10 +1337,9 @@ function switchTab(t){
   if(t===4)setTimeout(initMap,120);
 }
 
-/* Navigate to a restaurant from anywhere — switches to home tab and opens detail */
+/* Navigate to a restaurant from anywhere — opens detail WITHOUT switching tab */
 function navToRest(rid){
-  switchTab(0);
-  setTimeout(()=>openDetail(rid),80);
+  openDetail(rid);
 }
 
 /* ── SORT / VIEW ── */
